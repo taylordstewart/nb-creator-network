@@ -1222,6 +1222,7 @@
           <span class="label">Bulk send</span>
           <button class="btn btn-accent btn-sm" onclick="bulkSend('friday')">✉ Friday tracking emails</button>
           <button class="btn btn-sm" onclick="bulkSend('reminder')">✉ Wednesday reminder</button>
+          <button class="btn btn-sm" onclick="bulkSend('approval')">✉ Approval</button>
           <button class="btn btn-sm" onclick="bulkSend('followup1')">Late follow-up #1</button>
           <button class="btn btn-sm" onclick="bulkSend('followup2')">Follow-up #2</button>
           <button class="btn btn-sm" onclick="bulkSend('final')">Final notice</button>
@@ -1303,11 +1304,12 @@
     <table>
       <thead>
         <tr>
-          <th style="width: 20%">Name</th>
-          <th style="width: 28%">Email</th>
-          <th style="width: 20%">Account</th>
-          <th style="width: 20%">Invite code</th>
-          <th style="width: 12%; text-align: right;">Action</th>
+          <th style="width: 18%">Name</th>
+          <th style="width: 22%">Email</th>
+          <th style="width: 16%">Account</th>
+          <th style="width: 16%">Invite code</th>
+          <th style="width: 20%">Address</th>
+          <th style="width: 8%; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody id="roster-table"></tbody>
@@ -1896,7 +1898,7 @@ function renderRoster() {
   const tbody = document.getElementById('roster-table');
   tbody.innerHTML = '';
   if (state.roster.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="big">No creators yet</div><div>Click "Add creator" above to start</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty"><div class="big">No creators yet</div><div>Click "Add creator" above to start</div></td></tr>';
     return;
   }
   state.roster.forEach(c => {
@@ -1906,6 +1908,7 @@ function renderRoster() {
       <td><input value="${esc(c.email)}" data-field="email" type="email" /></td>
       <td><input value="${esc(c.account || '')}" data-field="account" /></td>
       <td><input value="${esc(c.code || '')}" data-field="code" /></td>
+      <td><input value="${esc(c.address || '')}" data-field="address" placeholder="123 Main St, City, ST" /></td>
       <td class="row-actions"><button class="icon-btn delete" data-remove-id="${c.id}" title="Remove from roster (does not affect campaigns)" onclick="removeRoster('${c.id}')">✕</button></td>
     `;
     tr.querySelectorAll('input').forEach(input => {
@@ -1919,7 +1922,7 @@ function renderRoster() {
 }
 
 function addRosterRow() {
-  state.roster.push({ id: 'r' + Date.now(), name: '', email: '', account: '', code: '' });
+  state.roster.push({ id: 'r' + Date.now(), name: '', email: '', account: '', code: '', address: '' });
   saveState();
   renderRoster();
 }
@@ -2648,6 +2651,9 @@ function buildEmail(type, creator, campaign) {
   } else if (type === 'post') {
     subject = `${brand}: Video Posted?`;
     body = `Hi ${firstName},\n\nI hope you're doing well! I'm reaching out regarding your video for ${brand}. I wanted to remind you that your video was approved.\n\nWe haven't seen the post go live just yet, and wanted to send a quick reminder to please publish your video when you have a moment.\n\nIf you've already posted, feel free to send the link my way so I can update our records. If you're experiencing any delays, just let me know!\n\nThank you again for your participation! We really appreciate you and all your hard work.\n\nBest,\nTaylor`;
+  } else if (type === 'approval') {
+    subject = `${brand}: Video Approved!`;
+    body = `Hi ${firstName},\n\nGreat news — your video for ${brand} has been approved! 🎉\n\nPlease post your video by ${postDue}.\n\nA few reminders before you post:\n• Make sure to include your invite/referral code: ${code}\n• Review the key copy points to ensure your caption includes accurate product information\n• Tag the brand appropriately per the video guidelines\n\nOnce you've posted, please send me the link so I can update our records.\n\nThank you so much for your hard work — we love the content!\n\nBest,\nTaylor`;
   }
   return { subject, body };
 }
@@ -2665,6 +2671,8 @@ function filterCreatorsFor(type, campaign) {
   } else if (type === 'followup1' || type === 'followup2' || type === 'final') {
     return creators.filter(c => c.email && (c.status === 'Not Submitted' || c.status === 'Emailed') && overdue);
   } else if (type === 'post') {
+    return creators.filter(c => c.email && c.status === 'Approved');
+  } else if (type === 'approval') {
     return creators.filter(c => c.email && c.status === 'Approved');
   }
   return [];
@@ -2700,7 +2708,16 @@ function openInOutlook() {
   const email = document.getElementById('modal-to').value;
   const subject = document.getElementById('modal-subject').value;
   const body = document.getElementById('modal-body').value;
-  openMailto(email, subject, body);
+  const bcc = currentModalEmail && currentModalEmail.bcc ? currentModalEmail.bcc : '';
+
+  let href = `mailto:${encodeURIComponent(email)}`;
+  const params = [];
+  if (bcc) params.push(`bcc=${encodeURIComponent(bcc)}`);
+  if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+  if (body) params.push(`body=${encodeURIComponent(body)}`);
+  if (params.length) href += '?' + params.join('&');
+
+  window.location.href = href;
   closeModal();
 }
 
@@ -2725,6 +2742,7 @@ function openCreatorEmailMenu(creatorId, event) {
   const options = [
     { type: 'friday', label: '✉ Friday tracking', desc: 'Tracking # + Typeform + deadlines' },
     { type: 'reminder', label: '✉ Wednesday reminder', desc: 'Day before video due' },
+    { type: 'approval', label: '✉ Approval', desc: 'Video approved — post by date + reminders' },
     { type: 'followup1', label: 'Late follow-up #1', desc: 'Gentle, after missed deadline' },
     { type: 'followup2', label: 'Follow-up #2', desc: 'Firmer tone' },
     { type: 'final', label: 'Final notice', desc: 'Warns about pause' },
@@ -2786,7 +2804,8 @@ function bulkSend(type) {
   if (eligible.length === 0) {
     const msg = {
       friday: 'No creators eligible — check that they have tracking numbers and are not opted out.',
-      reminder: 'No creators currently have status "Not Submitted".',
+      reminder: 'No creators currently have status "Not Submitted" or "Emailed".',
+      approval: 'No creators have status "Approved".',
       followup1: 'No overdue non-submitters.',
       followup2: 'No overdue non-submitters.',
       final: 'No overdue non-submitters.',
@@ -2799,27 +2818,47 @@ function bulkSend(type) {
   const typeLabel = {
     friday: 'Friday tracking',
     reminder: 'Wednesday reminder',
+    approval: 'Approval',
     followup1: 'Follow-up #1',
     followup2: 'Follow-up #2',
     final: 'Final notice',
     post: 'Missing post reminder'
   }[type];
 
-  showToast(`Opening ${eligible.length} ${typeLabel} email${eligible.length === 1 ? '' : 's'}…`);
+  // For Friday tracking — each creator needs their own tracking number so we
+  // keep individual sends. For everything else, open one email with all in BCC.
+  if (type === 'friday') {
+    // Individual sends — each creator has unique tracking #
+    showToast(`Opening ${eligible.length} individual tracking emails…`);
+    eligible.forEach((cr, i) => {
+      setTimeout(() => {
+        const { subject, body } = buildEmail(type, cr, c);
+        const href = `mailto:${encodeURIComponent(cr.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = href;
+        document.body.appendChild(iframe);
+        setTimeout(() => iframe.remove(), 2000);
+      }, i * 600);
+    });
+  } else {
+    // BCC send — one email, everyone in BCC, body uses first eligible creator as template
+    const bccEmails = eligible.map(cr => cr.email).filter(Boolean).join(',');
+    const { subject, body } = buildEmail(type, eligible[0], c);
 
-  // Open each mailto with a small delay so Outlook can catch up
-  eligible.forEach((cr, i) => {
-    setTimeout(() => {
-      const { subject, body } = buildEmail(type, cr, c);
-      const href = `mailto:${encodeURIComponent(cr.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      // Use hidden iframe to trigger mailto without navigating away
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = href;
-      document.body.appendChild(iframe);
-      setTimeout(() => iframe.remove(), 2000);
-    }, i * 600);
-  });
+    // Show in the email modal so user can review before opening Outlook
+    document.getElementById('modal-title').textContent = `${typeLabel} — ${eligible.length} creators`;
+    document.getElementById('modal-subtitle').textContent =
+      `All ${eligible.length} creators will be in BCC. Review and click "Open in Outlook".`;
+    document.getElementById('modal-to').value = '';
+    document.getElementById('modal-to').placeholder = '(leave To blank — recipients are in BCC)';
+    document.getElementById('modal-subject').value = subject;
+    // Replace first name with a generic greeting for BCC
+    const bccBody = body.replace(/^Hi \w+,/m, 'Hi,');
+    document.getElementById('modal-body').value = bccBody;
+    currentModalEmail = { email: '', bcc: bccEmails, subject, body: bccBody };
+    document.getElementById('modal').classList.add('active');
+  }
 }
 
 // ================================================================
