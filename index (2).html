@@ -1,0 +1,4411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Network Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink: #1a1915;
+    --ink-soft: #4a4842;
+    --muted: #8b8879;
+    --paper: #f8f5ec;
+    --paper-warm: #f3ede0;
+    --card: #ffffff;
+    --line: #e8e3d4;
+    --line-soft: #f0ecdd;
+
+    --accent: #c67b3f;
+    --accent-soft: #f7ebdc;
+    --accent-ink: #6b3d1c;
+
+    --main-tag: #2d5a3f;
+    --main-tag-bg: #e3efe6;
+    --bonus-tag: #8a3a6b;
+    --bonus-tag-bg: #f5e4ec;
+
+    --ok: #2f6b3c;
+    --ok-bg: #e7f3ea;
+    --warn: #8a6014;
+    --warn-bg: #fbf1dc;
+    --late: #8a2828;
+    --late-bg: #f9e4e4;
+    --off: #8a4444;
+    --off-bg: #f4eded;
+
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Inter', -apple-system, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--body);
+    color: var(--ink);
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(198,123,63,0.04), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(45,90,63,0.03), transparent 50%);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand-mark {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .brand-mark h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 38px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .brand-mark h1 em {
+    font-style: italic;
+    color: var(--accent-ink);
+    font-weight: 400;
+  }
+  .brand-sub {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+  .header-meta {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .header-meta .save-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot-save {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+
+  /* Tabs */
+  nav.tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 32px;
+    padding: 4px;
+    background: var(--paper-warm);
+    border-radius: 12px;
+    width: fit-content;
+  }
+  nav.tabs button {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+  }
+  nav.tabs button:hover {
+    color: var(--ink);
+  }
+  nav.tabs button.active {
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .view { display: none; }
+  .view.active { display: block; animation: fade 0.3s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Section titles */
+  h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  h2 em { font-style: italic; color: var(--accent-ink); }
+  .section-sub {
+    font-family: var(--display);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-lg { padding: 28px 32px; }
+  .card h3 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  /* Form fields */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: var(--body);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--card);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(198,123,63,0.1);
+  }
+  .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* Campaign type selector */
+  .campaign-type {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .campaign-type button {
+    padding: 8px 18px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 999px;
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .campaign-type button.active-main {
+    background: var(--main-tag-bg);
+    border-color: var(--main-tag);
+    color: var(--main-tag);
+  }
+  .campaign-type button.active-bonus {
+    background: var(--bonus-tag-bg);
+    border-color: var(--bonus-tag);
+    color: var(--bonus-tag);
+  }
+
+  /* Derived dates grid */
+  .dates-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    padding: 20px;
+    background: var(--paper-warm);
+    border-radius: 10px;
+    margin-top: 4px;
+  }
+  .date-cell {
+    text-align: left;
+  }
+  .date-cell .date-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .date-cell .date-val {
+    font-family: var(--display);
+    font-size: 17px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .date-cell.highlight .date-val {
+    color: var(--accent-ink);
+    font-style: italic;
+  }
+
+  /* Date override inputs */
+  .date-override-input {
+    width: 100%;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-family: var(--body);
+    font-size: 11px;
+    color: var(--muted);
+    background: transparent;
+    margin-bottom: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  .date-override-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .date-override-input.overridden {
+    border-color: var(--accent);
+    border-style: solid;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .date-reset-btn {
+    font-size: 10px;
+    color: var(--accent-ink);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--body);
+    padding: 0;
+    opacity: 0.7;
+  }
+  .date-reset-btn:hover { opacity: 1; }
+
+  /* Creators table */
+  .roster-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 9px 16px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 8px;
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--paper-warm); border-color: var(--ink-soft); }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn-accent:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-warm);
+  }
+  tbody td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+  }
+  tbody tr:hover { background: var(--paper-warm); }
+  tbody td input, tbody td select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--ink);
+    border-radius: 4px;
+  }
+  tbody td input:focus, tbody td select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--card);
+  }
+  tbody td input:hover, tbody td select:hover {
+    border-color: var(--line);
+  }
+
+  /* Status pill */
+  .status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .status-pill.not-submitted { background: var(--warn-bg); color: var(--warn); }
+  .status-pill.submitted, .status-pill.approved, .status-pill.posted { background: var(--ok-bg); color: var(--ok); }
+  .status-pill.reviewing, .status-pill.needs-revisions { background: var(--warn-bg); color: var(--warn); }
+  .status-pill.opt-out, .status-pill.paused { background: var(--off-bg); color: var(--off); }
+  .status-pill.late { background: var(--late-bg); color: var(--late); }
+  .status-pill.emailed { background: #E8F0FD; color: #2C5CC5; }
+
+  /* Emailed quick-mark button */
+  .icon-btn.emailed-active {
+    background: #E8F0FD;
+    border-color: #2C5CC5;
+    color: #2C5CC5;
+  }
+
+  /* Sortable column headers */
+  thead th[onclick]:hover { color: var(--ink); background: var(--line-soft); }
+  .sort-arrow { font-size: 10px; color: var(--muted); margin-left: 3px; }
+  .sort-arrow.asc::after  { content: '▲'; color: var(--accent-ink); }
+  .sort-arrow.desc::after { content: '▼'; color: var(--accent-ink); }
+
+  /* Row action column */
+  .row-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .icon-btn {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .icon-btn.delete:hover {
+    background: var(--late-bg);
+    border-color: var(--late);
+    color: var(--late);
+  }
+
+  /* Days column */
+  .days-cell {
+    font-family: var(--display);
+    font-size: 15px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .days-cell.late { color: var(--late); }
+  .days-cell.warn { color: var(--warn); }
+
+  /* Overview dashboard */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+  .stat.late::before { background: var(--late); opacity: 0.5; }
+  .stat.ok::before { background: var(--ok); opacity: 0.5; }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .stat-value {
+    font-family: var(--display);
+    font-size: 44px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stat-value em { font-style: italic; color: var(--accent-ink); }
+
+  /* Campaign cards grid */
+  .campaigns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .camp-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .camp-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .camp-card.main {
+    border-left: 4px solid var(--main-tag);
+  }
+  .camp-card.bonus {
+    border-left: 4px solid var(--bonus-tag);
+  }
+  .camp-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .camp-tag.main { background: var(--main-tag-bg); color: var(--main-tag); }
+  .camp-tag.bonus { background: var(--bonus-tag-bg); color: var(--bonus-tag); }
+
+  .camp-brand {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .camp-dates {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .camp-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .camp-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--paper-warm);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .camp-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+  .camp-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .camp-meta span strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .camp-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+
+  /* Email action bar */
+  .email-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--paper-warm);
+    border-radius: 10px;
+    border: 1px dashed var(--line);
+  }
+  .email-actions .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    align-self: center;
+    margin-right: 8px;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+  .empty .big {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 22px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,25,21,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+  }
+  .modal h3 {
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .modal p {
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+  }
+  textarea.email-preview {
+    width: 100%;
+    min-height: 300px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--paper);
+    resize: vertical;
+  }
+  textarea.email-preview:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* How it works */
+  .help-section {
+    padding: 20px 24px;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    border-left: 4px solid var(--accent);
+    margin-bottom: 24px;
+  }
+  .help-section h4 {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: var(--accent-ink);
+  }
+  .help-section ol {
+    padding-left: 20px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  .help-section ol li { margin-bottom: 4px; }
+
+  /* Floating save toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Checkbox list */
+  .checklist {
+    list-style: none;
+  }
+  .checklist li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .checklist li:last-child { border: none; }
+  .checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .checklist li.done .checkbox {
+    background: var(--ok);
+    border-color: var(--ok);
+  }
+  .checklist li.done .checkbox::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+  }
+  .checklist li.done .task-text { color: var(--muted); text-decoration: line-through; }
+  .task-text { flex: 1; font-size: 13px; }
+  .owner-pill {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--paper-warm);
+    color: var(--muted);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+
+  /* Utility */
+  .inline-code {
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    padding: 2px 6px;
+    background: var(--paper-warm);
+    border-radius: 4px;
+    color: var(--accent-ink);
+  }
+
+  .hidden { display: none !important; }
+
+  /* Filters bar */
+  .filters-bar {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; }
+  .filter-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .filter-group select {
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--card);
+    min-width: 120px;
+    cursor: pointer;
+  }
+  .filter-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(198,123,63,0.1);
+  }
+  .filter-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--display);
+    font-style: italic;
+  }
+
+  /* Back button */
+  .back-btn {
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  /* Email popover menu */
+  .email-popover {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(26,25,21,0.15);
+    padding: 6px;
+    min-width: 260px;
+    z-index: 150;
+  }
+  .email-popover-header {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 12px 10px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 4px;
+  }
+  .email-popover-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--body);
+    transition: background 0.1s;
+  }
+  .email-popover-item:hover {
+    background: var(--paper-warm);
+  }
+  .email-popover-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .email-popover-desc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* What's missing panel */
+  .missing-section { margin-bottom: 28px; }
+  .missing-section-title {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .missing-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .missing-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-warm);
+  }
+  .missing-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+  }
+  .missing-table tr:last-child td { border-bottom: none; }
+  .missing-table tr:hover td { background: var(--paper-warm); }
+  .missing-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+  .missing-tag.no-video { background: var(--late-bg); color: var(--late); }
+  .missing-tag.no-post { background: var(--warn-bg); color: var(--warn); }
+  .missing-tag.opt-out { background: var(--off-bg); color: var(--off); }
+
+  /* Floating help button */
+  .help-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(26,25,21,0.25);
+    transition: all 0.15s;
+    z-index: 90;
+    font-family: var(--display);
+  }
+  .help-fab:hover { background: var(--accent-ink); transform: scale(1.05); }
+
+  /* Upload dropzones */
+  .dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    background: var(--paper-warm);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .dropzone-title {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .dropzone-hint {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dropzone input[type="file"] { display: none; }
+
+  .tab-switch {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    padding: 3px;
+    background: var(--paper-warm);
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .tab-switch button {
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .tab-switch button.active {
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  /* Paste area */
+  .paste-area {
+    width: 100%;
+    min-height: 180px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--card);
+    resize: vertical;
+  }
+  .paste-area:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* Preview table in import modal */
+  .preview-table {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+  .preview-table table { font-size: 12px; }
+  .preview-table th { background: var(--paper-warm); position: sticky; top: 0; }
+  .preview-table td { padding: 6px 10px; }
+
+  /* Modal larger variant */
+  .modal.large {
+    max-width: 760px;
+  }
+
+  /* Badge for counts */
+  .mini-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="brand-mark">
+    <h1>Creator <em>Network</em></h1>
+    <span class="brand-sub">your workspace</span>
+  </div>
+  <div class="header-meta">
+    <span class="save-status">
+      <span class="dot-save"></span>
+      <span id="save-status-text">All changes saved</span>
+    </span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="campaigns">Campaigns</button>
+  <button class="tab-btn" data-tab="creators">Creator roster</button>
+</nav>
+
+<!-- OVERVIEW -->
+<section class="view active" data-view="overview">
+  <h2>At a <em>glance</em></h2>
+  <p class="section-sub">everything happening right now, across every campaign</p>
+
+  <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="stat"><div class="stat-label">Campaigns this month</div><div class="stat-value" id="stat-campaigns">0</div></div>
+    <div class="stat late"><div class="stat-label">Late — no video yet</div><div class="stat-value" id="stat-late">0</div></div>
+    <div class="stat"><div class="stat-label">Awaiting post</div><div class="stat-value" id="stat-await">0</div></div>
+  </div>
+
+  <h3 style="font-family: var(--display); font-weight: 500; font-size: 18px; margin-bottom: 16px;">This month</h3>
+  <div id="campaigns-overview" class="campaigns-grid"></div>
+
+  <!-- What's missing panel -->
+  <div id="whats-missing" style="margin-top: 32px;"></div>
+</section>
+
+<!-- CAMPAIGNS -->
+<section class="view" data-view="campaigns">
+
+  <!-- LIST VIEW: all campaigns as cards -->
+  <div id="campaigns-list-view">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
+      <div>
+        <h2>Campaigns</h2>
+        <p class="section-sub">select a campaign, or create a new one</p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn" id="upload-calendar-btn">⬆ Upload Beauty Pass calendar</button>
+        <button class="btn" id="upload-tracker-btn">⬆ Upload tracker sheet</button>
+        <button class="btn" id="upload-comp-top-btn">⬆ Upload comp list</button>
+        <button class="btn" id="cleanup-btn" style="color:var(--late);">🗑 Clean up empty campaigns</button>
+        <button class="btn btn-primary" id="new-campaign-btn">+ New campaign</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label class="filter-label">Search</label>
+        <input type="text" id="filter-search" placeholder="Brand name…" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: var(--body); font-size: 13px; color: var(--ink); background: var(--card); min-width: 160px;" />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Year</label>
+        <select id="filter-year"></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Month</label>
+        <select id="filter-month">
+          <option value="">All months</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Type</label>
+        <select id="filter-type">
+          <option value="main">Main FGF only</option>
+          <option value="all">Main + Bonus</option>
+          <option value="bonus">Bonus only</option>
+        </select>
+      </div>
+      <div class="filter-count" id="filter-count"></div>
+    </div>
+
+    <div id="campaign-selector" class="campaigns-grid"></div>
+  </div>
+
+  <!-- DETAIL VIEW: one campaign in full -->
+  <div id="campaign-editor" class="hidden">
+    <button class="btn back-btn" id="back-to-campaigns">← Back to all campaigns</button>
+
+    <div class="card card-lg">
+      <div class="campaign-type" id="campaign-type-selector">
+        <button data-type="main" class="active-main">● Main FGF</button>
+        <button data-type="bonus">● Bonus FGF</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Brand</label>
+          <input type="text" id="f-brand" placeholder="Neostrata" />
+        </div>
+        <div class="field">
+          <label>FGF date</label>
+          <input type="date" id="f-fgfdate" />
+        </div>
+        <div class="field">
+          <label>Typeform URL</label>
+          <input type="url" id="f-typeform" placeholder="https://beautypass.typeform.com/to/..." />
+        </div>
+      </div>
+
+      <div class="field-row-2">
+        <div class="field">
+          <label>Key copy points link (Box/Drive)</label>
+          <input type="url" id="f-copypoints" placeholder="https://..." />
+        </div>
+        <div class="field">
+          <label>Video guidelines link</label>
+          <input type="url" id="f-guidelines" placeholder="https://..." />
+        </div>
+      </div>
+
+      <div class="dates-grid">
+        <div class="date-cell"><div class="date-label">Ships</div><div class="date-val" id="d-ships">—</div></div>
+        <div class="date-cell highlight"><div class="date-label">Delivered / Anchor</div><div class="date-val" id="d-delivered">—</div></div>
+        <div class="date-cell"><div class="date-label">Typeform sent</div><div class="date-val" id="d-typeform-sent">—</div></div>
+        <div class="date-cell"><div class="date-label">Reminder</div><div class="date-val" id="d-reminder">—</div></div>
+        <div class="date-cell highlight">
+          <div class="date-label" style="display:flex; justify-content:space-between; align-items:center;">
+            Video due
+            <button class="date-reset-btn" id="d-videodue-reset" onclick="resetDateOverride('videoDue')" title="Reset to auto-calculated date" style="display:none;">↺ auto</button>
+          </div>
+          <input type="date" class="date-override-input" id="d-videodue-input" onchange="setDateOverride('videoDue', this.value)" />
+          <div class="date-val" id="d-videodue">—</div>
+        </div>
+        <div class="date-cell">
+          <div class="date-label" style="display:flex; justify-content:space-between; align-items:center;">
+            Post due
+            <button class="date-reset-btn" id="d-postdue-reset" onclick="resetDateOverride('postDue')" title="Reset to auto-calculated date" style="display:none;">↺ auto</button>
+          </div>
+          <input type="date" class="date-override-input" id="d-postdue-input" onchange="setDateOverride('postDue', this.value)" />
+          <div class="date-val" id="d-postdue">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Creators for this campaign</h3>
+        <div class="email-actions">
+          <span class="label">Bulk send</span>
+          <button class="btn btn-accent btn-sm" onclick="bulkSend('friday')">✉ Friday tracking emails</button>
+          <button class="btn btn-sm" onclick="bulkSend('reminder')">✉ Wednesday reminder</button>
+          <button class="btn btn-sm" onclick="bulkSend('approval')">✉ Approval</button>
+          <button class="btn btn-sm" onclick="bulkSend('followup1')">Late follow-up #1</button>
+          <button class="btn btn-sm" onclick="bulkSend('followup2')">Follow-up #2</button>
+          <button class="btn btn-sm" onclick="bulkSend('final')">Final notice</button>
+          <button class="btn btn-sm" onclick="bulkSend('post')">Missing post reminder</button>
+        </div>
+        <div class="roster-toolbar">
+          <div style="font-size: 12px; color: var(--muted);" id="creator-count">0 creators</div>
+          <div>
+            <button class="btn btn-sm" onclick="addCreatorRow()">+ Add creator</button>
+            <button class="btn btn-sm" onclick="importFromRoster()">Import from roster</button>
+            <button class="btn btn-sm" onclick="openCompListUpload()">⬆ Upload comp list</button>
+            <button class="btn btn-sm" onclick="openTypeformUpload()">⬆ Upload Typeform responses</button>
+          </div>
+        </div>
+        <!-- Bulk action bar — appears when creators are checked -->
+        <div id="bulk-action-bar" style="display:none; align-items:center; gap:10px; padding:10px 14px; background:var(--accent-soft); border-radius:10px; margin-bottom:10px; flex-wrap:wrap;">
+          <span style="font-size:12px; font-weight:600; color:var(--accent-ink);" id="bulk-selected-count">0 selected</span>
+          <span style="font-size:12px; color:var(--muted);">→ Set status to:</span>
+          <button class="btn btn-sm" onclick="bulkSetStatus('Emailed')">Emailed</button>
+          <button class="btn btn-sm" onclick="bulkSetStatus('Submitted')">Submitted</button>
+          <button class="btn btn-sm" onclick="bulkSetStatus('Approved')">Approved</button>
+          <button class="btn btn-sm" onclick="bulkSetStatus('Posted')">Posted</button>
+          <button class="btn btn-sm" onclick="bulkSetStatus('Opt Out')">Opt Out</button>
+          <button class="btn btn-sm" onclick="bulkSetStatus('Not Submitted')">Not Submitted</button>
+          <span style="flex:1;"></span>
+          <button class="btn btn-sm" style="color:var(--late);" onclick="bulkRemove()">Remove from campaign</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px; text-align:center;">
+                <input type="checkbox" id="creator-select-all" title="Select all"
+                  style="width:14px; height:14px; cursor:pointer; accent-color:var(--accent);"
+                  onchange="toggleSelectAllCreators(this.checked)" />
+              </th>
+              <th style="width: 16%; cursor:pointer; user-select:none;" onclick="sortCreators('name')" id="th-name">Name <span class="sort-arrow" id="sa-name"></span></th>
+              <th style="width: 20%">Email</th>
+              <th style="width: 13%">Tracking #</th>
+              <th style="width: 13%; cursor:pointer; user-select:none;" onclick="sortCreators('status')" id="th-status">Status <span class="sort-arrow" id="sa-status"></span></th>
+              <th style="width: 7%; cursor:pointer; user-select:none;" onclick="sortCreators('days')" id="th-days">Days <span class="sort-arrow" id="sa-days"></span></th>
+              <th style="width: 15%">Video link</th>
+              <th style="width: 10%; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="campaign-creators"></tbody>
+        </table>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3>SOP checklist</h3>
+          <ul class="checklist" id="sop-checklist"></ul>
+        </div>
+        <div class="card">
+          <h3>Campaign actions</h3>
+          <button class="btn" style="width: 100%; margin-bottom: 8px;" onclick="duplicateCampaign()">Duplicate this campaign</button>
+          <button class="btn" style="width: 100%; color: var(--late);" data-delete-campaign onclick="deleteCampaign()">Delete this campaign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CREATORS -->
+<section class="view" data-view="creators">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
+    <div>
+      <h2>Creator <em>roster</em></h2>
+      <p class="section-sub">your master list — used when starting new campaigns</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn" onclick="openRosterUpload()">⬆ Upload list</button>
+      <button class="btn btn-primary" onclick="addRosterRow()">+ Add creator</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 18%">Name</th>
+          <th style="width: 22%">Email</th>
+          <th style="width: 16%">Account</th>
+          <th style="width: 16%">Invite code</th>
+          <th style="width: 20%">Address</th>
+          <th style="width: 8%; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="roster-table"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- HELP removed — now a floating ? button -->
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Saved</div>
+
+<!-- Bulk confirm modal -->
+<div class="modal-overlay" id="bulk-confirm-modal">
+  <div class="modal" style="max-width: 420px;">
+    <h3 id="bulk-confirm-title">Are you sure?</h3>
+    <p style="margin-bottom:12px; color:var(--muted); font-size:13px;">This will apply to:</p>
+    <ul id="bulk-confirm-list" style="font-size:13px; padding-left:18px; margin-bottom:20px; max-height:200px; overflow-y:auto; color:var(--ink); line-height:1.8;"></ul>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeBulkConfirm()">Cancel</button>
+      <button class="btn btn-accent" id="bulk-confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating help button -->
+<button class="help-fab" id="help-fab" title="How to use">?</button>
+
+<!-- Help modal -->
+<div class="modal-overlay" id="help-modal">
+  <div class="modal large">
+    <h3>How to use this</h3>
+    <p>Everything you need to know, in one place.</p>
+
+    <div class="help-section">
+      <h4>First time here</h4>
+      <ol>
+        <li>Go to <strong>Campaigns → Upload Beauty Pass calendar</strong> to import all your campaigns at once from the BP file.</li>
+        <li>Go to <strong>Campaigns → Upload tracker sheet</strong> to import your existing Creator Network Post Calendar — each FGF tab becomes a campaign with all its creators, statuses, and post links.</li>
+        <li>Open any campaign, click <strong>Upload comp list</strong> to add Anna's comp list with tracking numbers for that campaign.</li>
+        <li>Go to <strong>Creator roster</strong> to manage your master list of creators. The X button removes them from the roster permanently — it does NOT remove them from any campaigns.</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h4>Weekly workflow</h4>
+      <ol>
+        <li><strong>Friday AM:</strong> Open the campaign, upload comp list from Anna, click "✉ Friday tracking emails" — Outlook opens once per creator, each pre-filled with their tracking number.</li>
+        <li><strong>Wednesday:</strong> Click "✉ Wednesday reminder" — only sends to creators who haven't submitted.</li>
+        <li><strong>After due date:</strong> Overview shows late creators. Use "What's missing" on the Overview to select late creators and generate the follow-up email.</li>
+        <li><strong>NuSkin / campaigns with no date:</strong> Open the campaign and type the FGF date — all other dates will fill in automatically.</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h4>Sending emails</h4>
+      <ol>
+        <li>Every email button opens Outlook with the subject, body, and recipient already filled in.</li>
+        <li>The ✉ icon on each creator row opens a menu to pick which type of email to send to just that person.</li>
+        <li>Bulk buttons send to a filtered group — Wednesday reminder skips people who already submitted, follow-ups skip people who aren't overdue, etc.</li>
+        <li>You always review before sending. Nothing goes out automatically.</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h4>Your data</h4>
+      <ol>
+        <li>Everything saves automatically as you type. No account or login needed.</li>
+        <li>Data lives in this browser on this computer. Don't clear browser data or you'll lose it.</li>
+        <li>Export a backup occasionally using the buttons below — save the file somewhere safe.</li>
+        <li>Right-click this tab → <strong>Pin tab</strong> so it stays visible all day.</li>
+      </ol>
+      <div style="margin-top: 14px; display: flex; gap: 8px;">
+        <button class="btn btn-sm" onclick="exportBackup()">Export backup</button>
+        <button class="btn btn-sm" onclick="importBackup()">Import backup</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleImport(event)" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeHelpModal()">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Email preview</h3>
+    <p id="modal-subtitle">Review the email, then click "Open in Outlook" to send it.</p>
+    <div class="field">
+      <label>To</label>
+      <input type="text" id="modal-to" readonly />
+    </div>
+    <div class="field" style="margin-top: 12px;">
+      <label>Subject</label>
+      <input type="text" id="modal-subject" />
+    </div>
+    <div class="field" style="margin-top: 12px;">
+      <label>Body</label>
+      <textarea class="email-preview" id="modal-body"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="openInOutlook()">Open in Outlook</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal large">
+    <h3 id="import-title">Upload</h3>
+    <p id="import-subtitle">Drop a file or paste rows</p>
+
+    <div class="tab-switch" id="import-switch">
+      <button class="active" data-mode="file">File upload</button>
+      <button data-mode="paste">Paste rows</button>
+    </div>
+
+    <div id="import-file-mode">
+      <div class="dropzone" id="import-dropzone">
+        <div class="dropzone-title">Drop Excel or CSV here</div>
+        <div class="dropzone-hint">or click to browse — supports .xlsx, .xls, .csv</div>
+        <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" />
+      </div>
+    </div>
+
+    <div id="import-paste-mode" class="hidden">
+      <p style="font-size: 12px; color: var(--muted); margin-bottom: 8px;" id="paste-hint">Paste from a spreadsheet — tab-separated or comma-separated, one row per creator.</p>
+      <textarea class="paste-area" id="import-paste-input" placeholder="Name	Email	Tracking
+Taylor Silva	taylorbsilva@gmail.com	4.91460047136E11
+Alena Shestakova	aisha0490@hotmail.com	4.91460047147E11"></textarea>
+      <div style="margin-top: 10px;">
+        <button class="btn btn-sm" onclick="parsePastedText()">Preview</button>
+      </div>
+    </div>
+
+    <div id="import-preview" class="hidden" style="margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+        <div style="font-family: var(--display); font-size: 16px; font-weight: 500;" id="import-preview-title">Preview</div>
+        <div style="font-size: 12px; color: var(--muted);" id="import-preview-count"></div>
+      </div>
+      <div class="preview-table">
+        <table id="import-preview-table"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-accent hidden" id="import-confirm-btn" onclick="confirmImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DATA MODEL — everything saves to localStorage automatically
+// ================================================================
+const STORAGE_KEY = 'creator_network_dashboard_v1';
+
+let state = {
+  roster: [],
+  campaigns: [],
+  activeCampaignId: null,
+  filters: {
+    year: null,      // null = current year
+    month: '',       // '' = all months
+    type: 'main'     // 'main' | 'bonus' | 'all' — default to main only
+  }
+};
+
+const DEFAULT_ROSTER = [
+  { name: 'Taylor Silva', email: 'taylorbsilva@gmail.com', account: '@makeupbytayb3', code: 'TAYLORBP2024' },
+  { name: 'Alena Shestakova', email: 'aisha0490@hotmail.com', account: '@alyonkashe', code: 'ALENABP2024' },
+  { name: 'Ellen Stoll', email: 'ellecookieig@gmail.com', account: '@ellecookie', code: 'ELLENBP2024' },
+  { name: 'Luisa Toth', email: 'lusprandugc@gmail.com', account: '@lus_beautyreviews', code: 'LUISABP2024' },
+  { name: 'Rachelle Gutierrez', email: 'rn103089@gmail.com', account: '@ellachar_g', code: 'RACHELLEBP2024' },
+  { name: 'Arlene Mejias', email: 'arlenenmejias@gmail.com', account: '@amejias1018', code: 'ARLENEBP2024' },
+  { name: 'Sonika Tomar', email: 'Sonikacreator@gmail.com', account: '@pinklove_creator', code: 'SONIKABP2024' },
+  { name: 'Emma Mitchell', email: 'ejanemitch@gmail.com', account: '@emmajanemitch', code: 'EMMABP2024' },
+  { name: 'Taylor Hildebrandt', email: 'taylorhildebrandt@gmail.com', account: '@reviewsbytaylor710', code: 'TAYLORHBP2024' },
+  { name: 'Ashley Farrar', email: 'ashley@makingupwithashley.com', account: '@makingupwithashley', code: 'ASHLEYBP2024' },
+  { name: 'Jacqueline Augusto', email: 'miamibeautyreviewer@gmail.com', account: '@miami_beauty_reviews', code: 'JACKIEBP2024' },
+  { name: 'Michelle Singh', email: 'msingh5893@gmail.com', account: '@michellesinghh', code: 'MICHELLESBP2024' },
+  { name: 'Kimberly Shomo', email: 'kimsaysfourletterwords@gmail.com', account: '@kimsaysfourletterwords', code: 'KIMBERLYBP2024' },
+  { name: 'Brittany Bell', email: 'b_bell99@hotmail.com', account: '@meaninginmakeup', code: 'BRITTANYBP2024' },
+  { name: 'Irene Rozp', email: 'ircalove1@gmail.com', account: '@ircalove', code: 'IRENEBP2024' },
+  { name: 'Jessica Karas', email: 'aimfortheglow@yahoo.com', account: '@aimfortheglow', code: 'JESSICABP2026' },
+  { name: 'Kat Luna', email: 'katreambeauty@gmail.com', account: '@hikatbeauty', code: 'KATBP2026' },
+  { name: 'Madeline Geronimo', email: 'madelinegeronimo@hotmail.com', account: '@madegmo', code: 'MADELINEBP2026' },
+  { name: 'Desi West', email: 'Desiglamups@gmail.com', account: '@desiglamups', code: 'DESIBP2026' }
+];
+
+const SOP_TASKS = [
+  { id: 't1', label: 'Confirm shipping list with Anna', owner: 'Anna' },
+  { id: 't2', label: 'Upload tracking numbers', owner: 'Anna' },
+  { id: 't3', label: 'Reformat Key Copy Points, save to Box', owner: 'You' },
+  { id: 't4', label: 'Update Canva guideline PDF', owner: 'You' },
+  { id: 't5', label: 'Build Typeform with brand + dates', owner: 'You' },
+  { id: 't6', label: 'Send Friday tracking email', owner: 'You' },
+  { id: 't7', label: 'Send Wednesday reminder', owner: 'You' },
+  { id: 't8', label: 'Review all video submissions', owner: 'You' },
+  { id: 't9', label: 'Send approval / revision emails', owner: 'You' },
+  { id: 't10', label: 'Save approved videos to Box', owner: 'You' },
+  { id: 't11', label: 'Log posted links', owner: 'You' }
+];
+
+// ================================================================
+// STORAGE
+// ================================================================
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    showToast('Saved');
+  } catch (e) {
+    console.error('Save failed:', e);
+    showToast('Save failed — export a backup');
+  }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      state = JSON.parse(raw);
+    } else {
+      // First run — seed roster
+      state.roster = DEFAULT_ROSTER.map((c, i) => ({ id: 'r' + i, ...c }));
+      saveState();
+    }
+    // Ensure filter shape exists even for older saves
+    if (!state.filters) {
+      state.filters = { year: null, month: '', type: 'main', search: '' };
+    }
+    if (state.filters.search === undefined) state.filters.search = '';
+  } catch (e) {
+    console.error('Load failed:', e);
+  }
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ================================================================
+// DATE HELPERS
+// ================================================================
+function addDays(dateStr, days) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return d;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  if (typeof d === 'string') d = new Date(d + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function fmtLongDate(d) {
+  if (!d) return '';
+  if (typeof d === 'string') d = new Date(d + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+function computeDates(fgfDate) {
+  if (!fgfDate) return {};
+  return {
+    ships: addDays(fgfDate, 5),
+    delivered: addDays(fgfDate, 6),
+    typeformSent: addDays(fgfDate, 7),
+    videoDue: addDays(fgfDate, 6 + 14),
+    reminder: addDays(fgfDate, 6 + 14 - 1),
+    postDue: addDays(fgfDate, 6 + 14 + 7)
+  };
+}
+function daysLeft(dueDate) {
+  if (!dueDate) return null;
+  if (typeof dueDate === 'string') dueDate = new Date(dueDate + 'T12:00:00');
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  return Math.round((dueDate - today) / 86400000);
+}
+
+// ================================================================
+// TABS
+// ================================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.dataset.view === target));
+    if (target === 'overview') renderOverview();
+    if (target === 'campaigns') renderCampaignsList();
+    if (target === 'creators') renderRoster();
+  });
+});
+
+// ================================================================
+// HELP FAB
+// ================================================================
+document.getElementById('help-fab').addEventListener('click', () => {
+  document.getElementById('help-modal').classList.add('active');
+});
+function closeHelpModal() {
+  document.getElementById('help-modal').classList.remove('active');
+}
+document.getElementById('help-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'help-modal') closeHelpModal();
+});
+
+// ================================================================
+// WHAT'S MISSING — overview panel showing who needs action
+// ================================================================
+function renderWhatsMissing() {
+  const container = document.getElementById('whats-missing');
+  container.innerHTML = '';
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = new Date(today);
+  cutoff.setDate(cutoff.getDate() - 60);
+
+  // Only past-due 2026+ campaigns
+  const pastDue = state.campaigns.filter(c => {
+    if (!c.fgfDate || c.fgfDate.slice(0, 4) < '2026') return false;
+    const dates = getEffectiveDates(c);
+    if (!dates.videoDue) return false;
+    return dates.videoDue < today && dates.videoDue >= cutoff;
+  });
+
+  // Build map: creatorName → array of { campaign, creatorObj, missing, dates }
+  const byCreator = {};
+  pastDue.forEach(c => {
+    const dates = getEffectiveDates(c);
+    (c.creators || []).forEach(cr => {
+      if (!cr.name) return;
+      if ((cr.status === 'Not Submitted' || cr.status === 'Emailed') && !cr.tracking) return; // not on comp list
+      if (cr.status !== 'Not Submitted' && cr.status !== 'Emailed' && cr.status !== 'Approved') return;
+      const key = cr.name.toLowerCase().trim();
+      if (!byCreator[key]) byCreator[key] = { name: cr.name, email: cr.email || '', items: [] };
+      byCreator[key].items.push({
+        campaign: c,
+        cr,
+        missing: (cr.status === 'Not Submitted' || cr.status === 'Emailed') ? 'video' : 'post',
+        dates
+      });
+    });
+  });
+
+  const keys = Object.keys(byCreator).sort((a, b) =>
+    byCreator[a].name.localeCompare(byCreator[b].name)
+  );
+
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;';
+  header.innerHTML = `
+    <h3 style="font-family:var(--display); font-weight:500; font-size:18px; margin:0;">
+      What's <em style="font-style:italic; color:var(--accent-ink);">missing</em>
+      ${keys.length > 0 ? `<span style="font-size:13px; font-weight:400; font-family:var(--body); color:var(--muted); margin-left:10px;">${keys.length} creator${keys.length === 1 ? '' : 's'}</span>` : ''}
+    </h3>
+    ${keys.length > 0 ? `
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span style="font-size:12px; color:var(--muted);">Select → generate email</span>
+      </div>
+    ` : ''}
+  `;
+  container.appendChild(header);
+
+  if (keys.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center; padding:20px; color:var(--muted); font-family:var(--display); font-style:italic; font-size:15px;';
+    empty.textContent = 'Nothing overdue ✓';
+    container.appendChild(empty);
+    return;
+  }
+
+  // Accordion list
+  const accordionCard = document.createElement('div');
+  accordionCard.className = 'card';
+  accordionCard.style.padding = '0';
+  accordionCard.style.overflow = 'hidden';
+
+  keys.forEach((key, idx) => {
+    const person = byCreator[key];
+    const missCount = person.items.length;
+    const hasVideo = person.items.some(i => i.missing === 'video');
+    const hasPost  = person.items.some(i => i.missing === 'post');
+
+    // Row — the clickable creator name
+    const row = document.createElement('div');
+    row.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--line-soft);
+      user-select: none;
+      background: ${idx % 2 === 0 ? 'var(--card)' : 'var(--paper-warm)'};
+      transition: background 0.1s;
+    `;
+    row.innerHTML = `
+      <span class="accordion-arrow" style="font-size:11px; color:var(--muted); transition:transform 0.2s; display:inline-block;">▶</span>
+      <span style="font-weight:500; flex:1;">${esc(person.name)}</span>
+      ${hasVideo ? `<span class="missing-tag no-video">${person.items.filter(i=>i.missing==='video').length} no video</span>` : ''}
+      ${hasPost  ? `<span class="missing-tag no-post">${person.items.filter(i=>i.missing==='post').length} no post</span>` : ''}
+    `;
+
+    // Detail panel — hidden by default
+    const detail = document.createElement('div');
+    detail.style.cssText = 'display:none; border-bottom: 2px solid var(--line);';
+
+    // Inner table of missing items
+    const innerTable = document.createElement('table');
+    innerTable.className = 'missing-table';
+    innerTable.style.margin = '0';
+    const tbody = document.createElement('tbody');
+
+    person.items.forEach(({ campaign, cr, missing, dates }) => {
+      const tr = document.createElement('tr');
+      tr.style.background = 'var(--accent-soft)';
+      tr.innerHTML = `
+        <td style="padding:8px 16px; width:36px;">
+          <input type="checkbox" class="missing-cb"
+            data-campaign-id="${campaign.id}"
+            data-creator-id="${cr.id}"
+            data-missing="${missing}"
+            style="width:14px; height:14px; cursor:pointer; accent-color:var(--accent);" />
+        </td>
+        <td style="font-size:12px; color:var(--ink-soft);">${esc(campaign.brand || 'Untitled')}</td>
+        <td style="font-size:12px; color:var(--muted);">Due ${fmtDate(dates.videoDue)}</td>
+        <td>
+          <span class="missing-tag ${missing === 'video' ? 'no-video' : 'no-post'}">
+            ${missing === 'video' ? 'No video' : 'No post'}
+          </span>
+        </td>
+        <td style="text-align:right; padding-right:16px;">
+          <button class="icon-btn" title="Email ${esc(person.name)}"
+            onclick="openCreatorEmailMenu('${cr.id}', event, '${campaign.id}')">✉</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    innerTable.appendChild(tbody);
+    detail.appendChild(innerTable);
+
+    // Toggle on click
+    row.addEventListener('click', () => {
+      const open = detail.style.display !== 'none';
+      detail.style.display = open ? 'none' : 'block';
+      row.querySelector('.accordion-arrow').style.transform = open ? '' : 'rotate(90deg)';
+    });
+
+    accordionCard.appendChild(row);
+    accordionCard.appendChild(detail);
+  });
+
+  container.appendChild(accordionCard);
+
+  // Action bar below the accordion
+  const actions = document.createElement('div');
+  actions.style.cssText = 'margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;';
+  actions.innerHTML = `
+    <span style="font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-right:4px;">For checked items</span>
+    <button class="btn btn-accent btn-sm" onclick="generateFromMissing('followup1')">✉ Late follow-up #1</button>
+    <button class="btn btn-sm" onclick="generateFromMissing('followup2')">Follow-up #2</button>
+    <button class="btn btn-sm" onclick="generateFromMissing('final')">Final notice</button>
+    <button class="btn btn-sm" onclick="generateFromMissing('post')">Missing post</button>
+  `;
+  container.appendChild(actions);
+}
+
+// renderMissingTable no longer needed — replaced by accordion
+function renderMissingTable() {}
+
+
+
+function generateFromMissing(type) {
+  // Collect checked rows
+  const checked = [...document.querySelectorAll('.missing-cb:checked')];
+  if (checked.length === 0) {
+    showToast('Check at least one creator first');
+    return;
+  }
+
+  // Group by campaign so we can handle multiple campaigns at once
+  // For simplicity: if all same campaign, use that campaign's template
+  // If mixed campaigns, build a combined list
+  const items = checked.map(cb => ({
+    campaignId: cb.dataset.campaignId,
+    creatorId: cb.dataset.creatorId,
+    missing: cb.dataset.missing
+  }));
+
+  // Get unique campaigns
+  const campaignIds = [...new Set(items.map(i => i.campaignId))];
+
+  if (campaignIds.length === 1) {
+    // All from same campaign — use normal flow
+    const campaign = state.campaigns.find(c => c.id === campaignIds[0]);
+    if (!campaign) return;
+    const creatorIds = items.map(i => i.creatorId);
+    const creators = creatorIds.map(id => (campaign.creators || []).find(cr => cr.id === id)).filter(Boolean);
+    if (creators.length === 1) {
+      openEmailModal(type, creators[0], campaign);
+      return;
+    }
+    // Multiple creators, same campaign
+    generateGroupEmail(campaignIds[0], type);
+    return;
+  }
+
+  // Multiple campaigns — build a combined email body
+  const dates0 = computeDates(state.campaigns.find(c => c.id === campaignIds[0])?.fgfDate);
+  const allLines = items.map(item => {
+    const camp = state.campaigns.find(c => c.id === item.campaignId);
+    const cr = (camp?.creators || []).find(c => c.id === item.creatorId);
+    if (!camp || !cr) return null;
+    const dates = computeDates(camp.fgfDate);
+    return `• ${cr.name} — ${camp.brand || 'Campaign'} — ${item.missing === 'video' ? 'Video due ' + fmtLongDate(dates.videoDue) : 'Post overdue'}`;
+  }).filter(Boolean);
+
+  const firstCreator = (() => {
+    const item = items[0];
+    const camp = state.campaigns.find(c => c.id === item.campaignId);
+    return (camp?.creators || []).find(c => c.id === item.creatorId);
+  })();
+  const firstCampaign = state.campaigns.find(c => c.id === items[0].campaignId);
+  if (!firstCreator || !firstCampaign) return;
+
+  const { subject } = buildEmail(type, firstCreator, firstCampaign);
+  const typeform = firstCampaign.typeformUrl || '[Typeform link]';
+
+  let body = '';
+  if (type === 'followup1') {
+    body = `Hi [Name],\n\nI hope you're doing well! I wanted to follow up as we have not yet received your submission(s) for the following:\n\n${allLines.join('\n')}\n\nPlease use the link below to submit:\n\n${typeform}\n\nBest,\nTaylor`;
+  } else if (type === 'followup2') {
+    body = `Hi [Name],\n\nI'm following up again regarding the outstanding submission(s) below:\n\n${allLines.join('\n')}\n\nPlease submit as soon as possible:\n\n${typeform}\n\nBest,\nTaylor`;
+  } else if (type === 'final') {
+    body = `Hi [Name],\n\nI'm reaching out one final time regarding:\n\n${allLines.join('\n')}\n\nIf we do not hear back within 48 hours, we will pause your participation in the program.\n\n${typeform}\n\nBest,\nTaylor`;
+  } else if (type === 'post') {
+    body = `Hi [Name],\n\nJust a reminder that the following video(s) have been approved and we haven't seen the post(s) go live yet:\n\n${allLines.join('\n')}\n\nPlease post when you have a moment!\n\nBest,\nTaylor`;
+  }
+
+  const allEmails = items.map(item => {
+    const camp = state.campaigns.find(c => c.id === item.campaignId);
+    const cr = (camp?.creators || []).find(c => c.id === item.creatorId);
+    return cr?.email;
+  }).filter(Boolean);
+
+  document.getElementById('modal-title').textContent = `Email — ${checked.length} selected`;
+  document.getElementById('modal-subtitle').textContent = `Covers ${checked.length} creator/campaign combinations. Copy-paste per person or open in Outlook.`;
+  document.getElementById('modal-to').value = [...new Set(allEmails)].join('; ');
+  document.getElementById('modal-subject').value = subject;
+  document.getElementById('modal-body').value = body;
+  currentModalEmail = { email: [...new Set(allEmails)].join('; '), subject, body };
+  document.getElementById('modal').classList.add('active');
+}
+
+// Update openCreatorEmailMenu to accept an optional campaignId
+const _origOpenCreatorEmailMenu = openCreatorEmailMenu;
+function openCreatorEmailMenu(creatorId, event, overrideCampaignId) {
+  if (overrideCampaignId) {
+    const tempOrig = state.activeCampaignId;
+    state.activeCampaignId = overrideCampaignId;
+    _origOpenCreatorEmailMenu(creatorId, event);
+    state.activeCampaignId = tempOrig;
+    return;
+  }
+  _origOpenCreatorEmailMenu(creatorId, event);
+}
+
+// ================================================================
+// ROSTER — clarify X button label
+// ================================================================
+function renderRoster() {
+  const tbody = document.getElementById('roster-table');
+  tbody.innerHTML = '';
+  if (state.roster.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty"><div class="big">No creators yet</div><div>Click "Add creator" above to start</div></td></tr>';
+    return;
+  }
+  state.roster.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input value="${esc(c.name)}" data-field="name" /></td>
+      <td><input value="${esc(c.email)}" data-field="email" type="email" /></td>
+      <td><input value="${esc(c.account || '')}" data-field="account" /></td>
+      <td><input value="${esc(c.code || '')}" data-field="code" /></td>
+      <td><input value="${esc(c.address || '')}" data-field="address" placeholder="123 Main St, City, ST" /></td>
+      <td class="row-actions"><button class="icon-btn delete" data-remove-id="${c.id}" title="Remove from roster (does not affect campaigns)" onclick="removeRoster('${c.id}')">✕</button></td>
+    `;
+    tr.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', () => {
+        c[input.dataset.field] = input.value;
+        saveState();
+      });
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function addRosterRow() {
+  state.roster.push({ id: 'r' + Date.now(), name: '', email: '', account: '', code: '', address: '' });
+  saveState();
+  renderRoster();
+}
+
+// Track pending deletes in JS (not DOM) so re-renders don't reset state
+const _pendingDeletes = {};
+
+function removeRoster(id) {
+  if (_pendingDeletes[id]) {
+    // Second click — confirmed, delete
+    delete _pendingDeletes[id];
+    state.roster = state.roster.filter(c => c.id !== id);
+    saveState();
+    renderRoster();
+    showToast('Removed from roster');
+  } else {
+    // First click — mark pending, update button appearance WITHOUT re-rendering
+    _pendingDeletes[id] = true;
+    const btn = document.querySelector(`button[data-remove-id="${id}"]`);
+    if (btn) {
+      btn.textContent = 'Sure?';
+      btn.style.cssText = 'background: var(--late-bg); color: var(--late); border-color: var(--late); width: auto; padding: 4px 10px; font-size: 11px;';
+    }
+    // Auto-cancel after 3 seconds
+    setTimeout(() => {
+      if (_pendingDeletes[id]) {
+        delete _pendingDeletes[id];
+        const b = document.querySelector(`button[data-remove-id="${id}"]`);
+        if (b) {
+          b.textContent = '✕';
+          b.style.cssText = '';
+        }
+      }
+    }, 3000);
+  }
+}
+
+// ================================================================
+// CAMPAIGNS
+// ================================================================
+// ================================================================
+// DATE OVERRIDES — let user set video due / post due independently
+// ================================================================
+function getEffectiveDates(campaign) {
+  const auto = computeDates(campaign.fgfDate);
+  const overrides = campaign.dateOverrides || {};
+
+  const videoDue = overrides.videoDue
+    ? new Date(overrides.videoDue + 'T12:00:00')
+    : auto.videoDue;
+
+  const postDue = overrides.postDue
+    ? new Date(overrides.postDue + 'T12:00:00')
+    : auto.postDue;
+
+  // Reminder is always day before video due
+  const reminder = videoDue
+    ? addDays(videoDue.toISOString().slice(0, 10), -1)
+    : auto.reminder;
+
+  return { ships: auto.ships, delivered: auto.delivered, typeformSent: auto.typeformSent, reminder, videoDue, postDue };
+}
+
+function setDateOverride(field, value) {
+  const c = getActiveCampaign();
+  if (!c) return;
+  if (!c.dateOverrides) c.dateOverrides = {};
+  if (value) {
+    c.dateOverrides[field] = value;
+  } else {
+    delete c.dateOverrides[field];
+  }
+  saveState();
+  renderCampaignEditor();
+  showToast(`${field === 'videoDue' ? 'Video due' : 'Post due'} updated`);
+}
+
+function resetDateOverride(field) {
+  const c = getActiveCampaign();
+  if (!c || !c.dateOverrides) return;
+  delete c.dateOverrides[field];
+  saveState();
+  renderCampaignEditor();
+  showToast('Reset to auto-calculated date');
+}
+
+// ================================================================
+function renderCampaignsList() {
+  const listView = document.getElementById('campaigns-list-view');
+  const editor = document.getElementById('campaign-editor');
+
+  // If a campaign is active, show the editor; otherwise show the list
+  if (state.activeCampaignId) {
+    listView.classList.add('hidden');
+    editor.classList.remove('hidden');
+    renderCampaignEditor();
+    return;
+  }
+
+  listView.classList.remove('hidden');
+  editor.classList.add('hidden');
+
+  // Build year options from campaigns data
+  const yearSelect = document.getElementById('filter-year');
+  const years = new Set();
+  state.campaigns.forEach(c => {
+    if (c.fgfDate) years.add(c.fgfDate.slice(0, 4));
+  });
+  // Always include current year + next year at minimum
+  const currentYear = new Date().getFullYear();
+  years.add(String(currentYear));
+  years.add(String(currentYear + 1));
+  const yearsSorted = [...years].sort().filter(y => parseInt(y) >= 2026);
+
+  // Default to current year if not set
+  if (!state.filters.year) state.filters.year = String(currentYear);
+
+  yearSelect.innerHTML = yearsSorted.map(y =>
+    `<option value="${y}" ${y === state.filters.year ? 'selected' : ''}>${y}</option>`
+  ).join('') + `<option value="all" ${state.filters.year === 'all' ? 'selected' : ''}>All years</option>`;
+
+  // Set month, type and search filter values
+  document.getElementById('filter-month').value = state.filters.month;
+  document.getElementById('filter-type').value = state.filters.type;
+  document.getElementById('filter-search').value = state.filters.search || '';
+
+  // Apply filters
+  let filtered = state.campaigns.slice();
+
+  // Search filter
+  if (state.filters.search && state.filters.search.trim()) {
+    const q = state.filters.search.toLowerCase().trim();
+    filtered = filtered.filter(c => (c.brand || '').toLowerCase().includes(q));
+  }
+
+  // Year filter — default excludes pre-2026
+  if (state.filters.year && state.filters.year !== 'all') {
+    filtered = filtered.filter(c => c.fgfDate && c.fgfDate.slice(0, 4) === state.filters.year);
+  } else if (state.filters.year === 'all') {
+    // Still hide pre-2026 by default
+    filtered = filtered.filter(c => !c.fgfDate || c.fgfDate.slice(0, 4) >= '2026');
+  }
+
+  // Month filter
+  if (state.filters.month) {
+    const targetMonth = String(state.filters.month).padStart(2, '0');
+    filtered = filtered.filter(c => c.fgfDate && c.fgfDate.slice(5, 7) === targetMonth);
+  }
+
+  // Type filter
+  if (state.filters.type === 'main') {
+    filtered = filtered.filter(c => c.type === 'main');
+  } else if (state.filters.type === 'bonus') {
+    filtered = filtered.filter(c => c.type === 'bonus');
+  }
+
+  // Sort by date ascending
+  filtered.sort((a, b) => (a.fgfDate || '').localeCompare(b.fgfDate || ''));
+
+  document.getElementById('filter-count').textContent =
+    `${filtered.length} of ${state.campaigns.length} campaign${state.campaigns.length === 1 ? '' : 's'}`;
+
+  const sel = document.getElementById('campaign-selector');
+  sel.innerHTML = '';
+
+  if (filtered.length === 0) {
+    const msg = state.campaigns.length === 0
+      ? '<div class="big">No campaigns yet</div><div>Click "+ New campaign" or upload the Beauty Pass calendar</div>'
+      : '<div class="big">No campaigns match these filters</div><div>Try different year, month, or type</div>';
+    sel.innerHTML = `<div class="empty" style="grid-column: 1 / -1;">${msg}</div>`;
+    return;
+  }
+
+  filtered.forEach(c => {
+    const dates = getEffectiveDates(c);
+    const creators = c.creators || [];
+    const submitted = creators.filter(cr => ['Submitted','Approved','Posted','Reviewing'].includes(cr.status)).length;
+    const total = creators.length || 1;
+    const pct = Math.round((submitted / total) * 100);
+
+    const card = document.createElement('div');
+    card.className = `camp-card ${c.type}`;
+    card.innerHTML = `
+      <span class="camp-tag ${c.type}">${c.type === 'main' ? 'Main FGF' : 'Bonus FGF'}</span>
+      <div class="camp-brand">${esc(c.brand || 'Untitled')}</div>
+      <div class="camp-dates">${c.fgfDate ? 'FGF ' + fmtDate(c.fgfDate) + ' · Due ' + fmtDate(dates.videoDue) : 'No date set'}</div>
+      <div class="camp-progress">
+        <div class="camp-bar"><div class="camp-bar-fill" style="width: ${pct}%;"></div></div>
+        <span><strong>${submitted}</strong>/${creators.length}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => selectCampaign(c.id));
+    sel.appendChild(card);
+  });
+}
+
+function selectCampaign(id) {
+  state.activeCampaignId = id;
+  saveState();
+  // Scroll to top when opening a campaign
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  renderCampaignsList();
+}
+
+function backToCampaignsList() {
+  state.activeCampaignId = null;
+  saveState();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  renderCampaignsList();
+}
+
+document.getElementById('new-campaign-btn').addEventListener('click', () => {
+  const newCamp = {
+    id: 'c' + Date.now(),
+    brand: '',
+    fgfDate: '',
+    typeformUrl: '',
+    copyPointsUrl: '',
+    guidelinesUrl: '',
+    type: 'main',
+    creators: [],
+    sopDone: {}
+  };
+  state.campaigns.push(newCamp);
+  state.activeCampaignId = newCamp.id;
+  saveState();
+  renderCampaignsList();
+});
+
+function getActiveCampaign() {
+  return state.campaigns.find(c => c.id === state.activeCampaignId);
+}
+
+function renderCampaignEditor() {
+  const c = getActiveCampaign();
+  if (!c) return;
+
+  // Type selector
+  document.querySelectorAll('#campaign-type-selector button').forEach(btn => {
+    btn.classList.remove('active-main', 'active-bonus');
+    if (btn.dataset.type === c.type) {
+      btn.classList.add(c.type === 'main' ? 'active-main' : 'active-bonus');
+    }
+  });
+
+  // Fields
+  document.getElementById('f-brand').value = c.brand || '';
+  document.getElementById('f-fgfdate').value = c.fgfDate || '';
+  document.getElementById('f-typeform').value = c.typeformUrl || '';
+  document.getElementById('f-copypoints').value = c.copyPointsUrl || '';
+  document.getElementById('f-guidelines').value = c.guidelinesUrl || '';
+
+  // Dates — use override if set, otherwise auto-calculate
+  if (!c.dateOverrides) c.dateOverrides = {};
+  const dates = getEffectiveDates(c);
+  const effective = getEffectiveDates(c);
+
+  document.getElementById('d-ships').textContent = fmtDate(dates.ships);
+  document.getElementById('d-delivered').textContent = fmtDate(dates.delivered);
+  document.getElementById('d-typeform-sent').textContent = fmtDate(dates.typeformSent);
+  document.getElementById('d-reminder').textContent = fmtDate(effective.reminder);
+
+  // Video due override
+  const vidInput = document.getElementById('d-videodue-input');
+  const vidReset = document.getElementById('d-videodue-reset');
+  const vidVal = document.getElementById('d-videodue');
+  if (c.dateOverrides.videoDue) {
+    vidInput.value = c.dateOverrides.videoDue;
+    vidInput.classList.add('overridden');
+    vidReset.style.display = 'inline';
+    vidVal.style.display = 'none';
+  } else {
+    vidInput.value = dates.videoDue ? dates.videoDue.toISOString().slice(0, 10) : '';
+    vidInput.classList.remove('overridden');
+    vidReset.style.display = 'none';
+    vidVal.style.display = 'block';
+    vidVal.textContent = fmtDate(dates.videoDue);
+  }
+
+  // Post due override
+  const postInput = document.getElementById('d-postdue-input');
+  const postReset = document.getElementById('d-postdue-reset');
+  const postVal = document.getElementById('d-postdue');
+  if (c.dateOverrides.postDue) {
+    postInput.value = c.dateOverrides.postDue;
+    postInput.classList.add('overridden');
+    postReset.style.display = 'inline';
+    postVal.style.display = 'none';
+  } else {
+    postInput.value = dates.postDue ? dates.postDue.toISOString().slice(0, 10) : '';
+    postInput.classList.remove('overridden');
+    postReset.style.display = 'none';
+    postVal.style.display = 'block';
+    postVal.textContent = fmtDate(dates.postDue);
+  }
+
+  renderSOPChecklist(c);
+  renderCampaignCreators(c);
+}
+
+// Wire up campaign field listeners once
+['f-brand', 'f-fgfdate', 'f-typeform', 'f-copypoints', 'f-guidelines'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const c = getActiveCampaign();
+    if (!c) return;
+    if (id === 'f-brand') c.brand = el.value;
+    if (id === 'f-fgfdate') c.fgfDate = el.value;
+    if (id === 'f-typeform') c.typeformUrl = el.value;
+    if (id === 'f-copypoints') c.copyPointsUrl = el.value;
+    if (id === 'f-guidelines') c.guidelinesUrl = el.value;
+    saveState();
+    if (id === 'f-fgfdate') {
+      renderCampaignEditor();
+      renderCampaignsList();
+    } else {
+      // Update card brand but don't re-render editor mid-typing
+      document.querySelectorAll('#campaign-selector .camp-card').forEach(card => {
+        if (card.classList.contains('active')) {
+          const brandEl = card.querySelector('.camp-brand');
+          if (brandEl) brandEl.textContent = c.brand || 'Untitled';
+        }
+      });
+    }
+  });
+});
+
+document.querySelectorAll('#campaign-type-selector button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const c = getActiveCampaign();
+    if (!c) return;
+    c.type = btn.dataset.type;
+    saveState();
+    renderCampaignsList();
+  });
+});
+
+function renderSOPChecklist(c) {
+  const ul = document.getElementById('sop-checklist');
+  ul.innerHTML = '';
+  SOP_TASKS.forEach(task => {
+    const done = c.sopDone[task.id];
+    const li = document.createElement('li');
+    if (done) li.classList.add('done');
+    li.innerHTML = `
+      <div class="checkbox"></div>
+      <span class="task-text">${task.label}</span>
+      <span class="owner-pill">${task.owner}</span>
+    `;
+    li.addEventListener('click', () => {
+      c.sopDone[task.id] = !c.sopDone[task.id];
+      saveState();
+      renderSOPChecklist(c);
+    });
+    ul.appendChild(li);
+  });
+}
+
+// ================================================================
+// CAMPAIGN CREATORS
+// ================================================================
+function renderCampaignCreators(c) {
+  const tbody = document.getElementById('campaign-creators');
+  const countEl = document.getElementById('creator-count');
+  tbody.innerHTML = '';
+
+  if (!c.creators || c.creators.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty"><div class="big">No creators yet</div><div>Click "Import from roster" to add your 25</div></td></tr>';
+    countEl.textContent = '0 creators';
+    return;
+  }
+
+  const dates = getEffectiveDates(c);
+  updateSortArrows();
+  const sortedCreators = applyCreatorSort(c.creators, dates);
+
+  sortedCreators.forEach((cr, idx) => {
+    if (!cr.status) cr.status = 'Not Submitted';
+    const days = ((cr.status === 'Not Submitted' || cr.status === 'Emailed') && dates.videoDue) ? daysLeft(dates.videoDue) : null;
+    const daysCellClass = days !== null ? (days < 0 ? 'late' : days <= 2 ? 'warn' : '') : '';
+    const daysText = days !== null ? (days < 0 ? `${Math.abs(days)} late` : days === 0 ? 'today' : `${days}d`) : '—';
+
+    const tr = document.createElement('tr');
+    tr.dataset.creatorId = cr.id;
+    tr.innerHTML = `
+      <td style="text-align:center; padding: 6px 8px;">
+        <input type="checkbox" class="creator-checkbox"
+          data-creator-id="${cr.id}"
+          style="width:14px; height:14px; cursor:pointer; accent-color:var(--accent);"
+          onchange="updateBulkBar()" />
+      </td>
+      <td><input value="${esc(cr.name || '')}" data-field="name" /></td>
+      <td><input value="${esc(cr.email || '')}" data-field="email" type="email" /></td>
+      <td><input value="${esc(cr.tracking || '')}" data-field="tracking" placeholder="paste tracking #" /></td>
+      <td>
+        <select data-field="status">
+          ${['Not Submitted','Emailed','Submitted','Reviewing','Approved','Needs Revisions','Posted','Opt Out','Paused']
+            .map(s => `<option ${cr.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td class="days-cell ${daysCellClass}">${daysText}</td>
+      <td><input value="${esc(cr.videoLink || '')}" data-field="videoLink" placeholder="paste link" /></td>
+      <td class="row-actions">
+        <button class="icon-btn ${cr.status === 'Emailed' ? 'emailed-active' : ''}"
+          title="${cr.status === 'Emailed' ? 'Already marked emailed — click to undo' : 'Mark as emailed'}"
+          onclick="toggleEmailed('${cr.id}')">📧</button>
+        <button class="icon-btn" title="Email this creator" onclick="openCreatorEmailMenu('${cr.id}', event)">✉</button>
+        <button class="icon-btn delete" title="Remove from campaign" onclick="removeCreatorFromCampaign('${cr.id}')">✕</button>
+      </td>
+    `;
+    tr.querySelectorAll('input[data-field], select').forEach(input => {
+      input.addEventListener('change', () => {
+        cr[input.dataset.field] = input.value;
+        saveState();
+        renderCampaignCreators(c);
+        renderCampaignsList();
+      });
+    });
+    tbody.appendChild(tr);
+  });
+  // Reset bulk bar when table re-renders
+  updateBulkBar();
+  countEl.textContent = `${c.creators.length} creator${c.creators.length === 1 ? '' : 's'}`;
+}
+
+function toggleEmailed(creatorId) {
+  const c = getActiveCampaign();
+  if (!c) return;
+  const cr = (c.creators || []).find(x => x.id === creatorId);
+  if (!cr) return;
+  cr.status = cr.status === 'Emailed' ? 'Not Submitted' : 'Emailed';
+  saveState();
+  renderCampaignCreators(c);
+  showToast(cr.status === 'Emailed' ? `${cr.name} marked emailed` : `${cr.name} unmarked`);
+}
+
+// ================================================================
+// BULK ACTIONS — select multiple creators, act on all at once
+// ================================================================
+function getCheckedCreatorIds() {
+  return [...document.querySelectorAll('.creator-checkbox:checked')]
+    .map(cb => cb.dataset.creatorId);
+}
+
+function updateBulkBar() {
+  const checked = getCheckedCreatorIds();
+  const bar = document.getElementById('bulk-action-bar');
+  const countEl = document.getElementById('bulk-selected-count');
+  if (!bar || !countEl) return;
+  if (checked.length > 0) {
+    bar.style.display = 'flex';
+    countEl.textContent = `${checked.length} selected`;
+  } else {
+    bar.style.display = 'none';
+  }
+  // Update select-all checkbox state
+  const all = document.querySelectorAll('.creator-checkbox');
+  const selectAll = document.getElementById('creator-select-all');
+  if (selectAll) {
+    selectAll.checked = all.length > 0 && checked.length === all.length;
+    selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+  }
+}
+
+function toggleSelectAllCreators(checked) {
+  document.querySelectorAll('.creator-checkbox').forEach(cb => cb.checked = checked);
+  updateBulkBar();
+}
+
+function bulkSetStatus(newStatus) {
+  const c = getActiveCampaign();
+  if (!c) return;
+  const ids = getCheckedCreatorIds();
+  if (ids.length === 0) return;
+
+  const names = ids.map(id => {
+    const cr = c.creators.find(x => x.id === id);
+    return cr ? cr.name : id;
+  }).filter(Boolean);
+
+  showBulkConfirm(
+    `Set ${ids.length} creator${ids.length === 1 ? '' : 's'} to "${newStatus}"?`,
+    names,
+    `Mark as ${newStatus}`,
+    () => {
+      ids.forEach(id => {
+        const cr = c.creators.find(x => x.id === id);
+        if (cr) cr.status = newStatus;
+      });
+      saveState();
+      renderCampaignCreators(c);
+      renderCampaignsList();
+      renderWhatsMissing();
+      showToast(`${ids.length} creator${ids.length === 1 ? '' : 's'} marked ${newStatus}`);
+    }
+  );
+}
+
+function bulkRemove() {
+  const c = getActiveCampaign();
+  if (!c) return;
+  const ids = getCheckedCreatorIds();
+  if (ids.length === 0) return;
+
+  const names = ids.map(id => {
+    const cr = c.creators.find(x => x.id === id);
+    return cr ? cr.name : id;
+  }).filter(Boolean);
+
+  showBulkConfirm(
+    `Remove ${ids.length} creator${ids.length === 1 ? '' : 's'} from this campaign?`,
+    names,
+    'Remove from campaign',
+    () => {
+      const idSet = new Set(ids);
+      c.creators = c.creators.filter(cr => !idSet.has(cr.id));
+      saveState();
+      renderCampaignCreators(c);
+      renderCampaignsList();
+      showToast(`${ids.length} creator${ids.length === 1 ? '' : 's'} removed`);
+    }
+  );
+}
+
+// Confirmation modal for bulk actions
+function showBulkConfirm(title, names, confirmLabel, onConfirm) {
+  const overlay = document.getElementById('bulk-confirm-modal');
+  const titleEl = document.getElementById('bulk-confirm-title');
+  const listEl = document.getElementById('bulk-confirm-list');
+  const confirmBtn = document.getElementById('bulk-confirm-btn');
+
+  titleEl.textContent = title;
+  listEl.innerHTML = names.map(n => `<li>${esc(n)}</li>`).join('');
+  confirmBtn.textContent = confirmLabel;
+
+  overlay.classList.add('active');
+
+  // Wire confirm — remove old listener first
+  const newBtn = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+  document.getElementById('bulk-confirm-btn').textContent = confirmLabel;
+  document.getElementById('bulk-confirm-btn').addEventListener('click', () => {
+    overlay.classList.remove('active');
+    onConfirm();
+  });
+}
+
+function closeBulkConfirm() {
+  document.getElementById('bulk-confirm-modal').classList.remove('active');
+}
+
+// ================================================================
+// SORT — creator table
+// ================================================================
+const _creatorSort = { field: 'name', dir: 'asc' };
+
+function sortCreators(field) {
+  if (_creatorSort.field === field) {
+    _creatorSort.dir = _creatorSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _creatorSort.field = field;
+    _creatorSort.dir = 'asc';
+  }
+  const c = getActiveCampaign();
+  if (c) renderCampaignCreators(c);
+}
+
+function applyCreatorSort(creators, dates) {
+  const { field, dir } = _creatorSort;
+  const sorted = [...creators];
+  const mul = dir === 'asc' ? 1 : -1;
+
+  sorted.sort((a, b) => {
+    if (field === 'name') {
+      return mul * (a.name || '').localeCompare(b.name || '');
+    }
+    if (field === 'status') {
+      // Sort by status in a meaningful order
+      const order = ['Not Submitted','Emailed','Submitted','Reviewing','Needs Revisions','Approved','Posted','Opt Out','Paused'];
+      return mul * (order.indexOf(a.status) - order.indexOf(b.status));
+    }
+    if (field === 'days') {
+      const dueDate = dates.videoDue;
+      const dA = (a.status === 'Not Submitted' || a.status === 'Emailed') && dueDate ? daysLeft(dueDate) : 999;
+      const dB = (b.status === 'Not Submitted' || b.status === 'Emailed') && dueDate ? daysLeft(dueDate) : 999;
+      return mul * (dA - dB);
+    }
+    return 0;
+  });
+  return sorted;
+}
+
+function updateSortArrows() {
+  ['name', 'status', 'days'].forEach(f => {
+    const el = document.getElementById(`sa-${f}`);
+    if (!el) return;
+    el.className = 'sort-arrow' + (_creatorSort.field === f ? ` ${_creatorSort.dir}` : '');
+  });
+}
+
+function addCreatorRow() {
+  const c = getActiveCampaign();
+  if (!c) return;
+  if (!c.creators) c.creators = [];
+  c.creators.push({
+    id: 'cc' + Date.now(),
+    name: '', email: '', inviteCode: '', tracking: '',
+    status: 'Not Submitted', videoLink: ''
+  });
+  saveState();
+  renderCampaignCreators(c);
+}
+
+function importFromRoster() {
+  const c = getActiveCampaign();
+  if (!c) return;
+  if (!c.creators) c.creators = [];
+  const existingEmails = new Set(c.creators.map(cr => cr.email.toLowerCase()));
+  let added = 0;
+  state.roster.forEach(r => {
+    if (!existingEmails.has((r.email || '').toLowerCase())) {
+      c.creators.push({
+        id: 'cc' + Date.now() + Math.random(),
+        name: r.name,
+        email: r.email,
+        inviteCode: r.code,
+        tracking: '',
+        status: 'Not Submitted',
+        videoLink: ''
+      });
+      added++;
+    }
+  });
+  saveState();
+  renderCampaignCreators(c);
+  renderCampaignsList();
+  showToast(`Added ${added} creators`);
+}
+
+function removeCreatorFromCampaign(id) {
+  const c = getActiveCampaign();
+  if (!c) return;
+  c.creators = c.creators.filter(cr => cr.id !== id);
+  saveState();
+  renderCampaignCreators(c);
+  renderCampaignsList();
+}
+
+function duplicateCampaign() {
+  const c = getActiveCampaign();
+  if (!c) return;
+  const copy = JSON.parse(JSON.stringify(c));
+  copy.id = 'c' + Date.now();
+  copy.brand = (c.brand || '') + ' (copy)';
+  copy.sopDone = {};
+  (copy.creators || []).forEach(cr => {
+    cr.id = 'cc' + Date.now() + Math.random();
+    cr.tracking = '';
+    cr.status = 'Not Submitted';
+    cr.videoLink = '';
+  });
+  state.campaigns.push(copy);
+  state.activeCampaignId = copy.id;
+  saveState();
+  renderCampaignsList();
+  showToast('Campaign duplicated');
+}
+
+function deleteCampaign() {
+  const c = getActiveCampaign();
+  if (!c) return;
+  const btn = document.querySelector('button[data-delete-campaign]');
+  if (!btn) return;
+  if (btn.dataset.confirming === 'true') {
+    state.campaigns = state.campaigns.filter(x => x.id !== c.id);
+    state.activeCampaignId = null;
+    saveState();
+    renderCampaignsList();
+    showToast('Campaign deleted');
+  } else {
+    btn.dataset.confirming = 'true';
+    btn.textContent = 'Tap again to confirm delete';
+    btn.style.background = 'var(--late-bg)';
+    btn.style.color = 'var(--late)';
+    setTimeout(() => {
+      if (btn && btn.dataset.confirming === 'true') {
+        btn.dataset.confirming = 'false';
+        btn.textContent = 'Delete this campaign';
+        btn.style.background = '';
+        btn.style.color = 'var(--late)';
+      }
+    }, 3000);
+  }
+}
+
+// ================================================================
+// EMAIL TEMPLATES
+// ================================================================
+function buildEmail(type, creator, campaign) {
+  const dates = getEffectiveDates(campaign);
+  const videoDue = fmtLongDate(dates.videoDue);
+  const postDue = fmtLongDate(dates.postDue);
+  const brand = campaign.brand || '[Brand]';
+  const typeform = campaign.typeformUrl || '[Typeform link]';
+  const firstName = (creator.name || '').split(' ')[0] || 'there';
+  const tracking = creator.tracking || '[tracking number]';
+  const code = creator.inviteCode || '[invite code]';
+
+  let subject = '', body = '';
+
+  if (type === 'friday') {
+    subject = `${brand}: Tracking & Video Submission`;
+    body = `Hi ${firstName},\n\nHappy Friday! Your next product, ${brand}, was delivered.\n\nTracking: ${tracking}\n\nYou can view the key copy points and video guideline reminders, as well as submit your video for approval using the link below.\n\n• Please submit your video for approval by ${videoDue}.\n• Once approved, please post your video by ${postDue}.\n\nTypeform: ${typeform}\n\nYour invite code: ${code}\n\nPlease let me know if you have any questions! We hope you enjoy the product.\n\nHave a great weekend!\nTaylor`;
+  } else if (type === 'reminder') {
+    subject = `${brand}: Reminder | Creator Network`;
+    body = `Hi ${firstName},\n\nI hope all is well! Friendly reminder that your next video for the ${brand} product is due tomorrow, ${videoDue}. I hope you are enjoying the product!\n\nYou can review the key copy points and video guideline reminders, as well as submit your video for approval here:\n\n${typeform}\n\nAs always, please feel free to reach out if you have any questions!\n\nIf you have already submitted to Typeform, please ignore this email.\n\nBest,\nTaylor`;
+  } else if (type === 'followup1') {
+    subject = `${brand}: Video Submission Follow-up`;
+    body = `Hi ${firstName},\n\nI hope you're doing well! I wanted to follow up as we have not yet received your video submission for ${brand} — due ${videoDue}.\n\nWhen you have a moment, please use the link below to review the key copy points, video guidelines, and submit your video for approval:\n\n${typeform}\n\nIf you've experienced any delays with product delivery, need additional time, or would like to opt out, please let me know as soon as possible so I can note this on our end.\n\nWe appreciate the time and effort you put into your content and look forward to your submission!\n\nBest,\nTaylor`;
+  } else if (type === 'followup2') {
+    subject = `${brand}: Outstanding Video Submission — Second Notice`;
+    body = `Hi ${firstName},\n\nI'm following up again regarding your outstanding video submission for ${brand} — due ${videoDue} — as we have not yet received a response.\n\nPlease submit your video using the link below as soon as possible:\n\n${typeform}\n\nIf you're unable to complete this submission, it's important that you let me know right away. Consistent communication is a key part of participating in the Creator Network, and we're happy to make notes if you need to opt out.\n\nI appreciate your prompt attention to this and look forward to hearing from you today.\n\nBest,\nTaylor`;
+  } else if (type === 'final') {
+    subject = `${brand}: Final Notice — Video Submission`;
+    body = `Hi ${firstName},\n\nI'm reaching out one final time regarding the missing video submission for ${brand} — due ${videoDue}.\n\nWe have sent multiple reminders and have not received your submission or a response.\n\nParticipation in the Creator Network requires timely submissions and communication. If we do not hear back from you within 48 hours, we will pause your participation in the program at this time.\n\nIf you would still like to complete this video or remain active in the Creator Network, please respond to this email and submit your content using the link below:\n\n${typeform}\n\nThank you for your understanding, and we hope to hear from you soon.\n\nBest,\nTaylor`;
+  } else if (type === 'post') {
+    subject = `${brand}: Video Posted?`;
+    body = `Hi ${firstName},\n\nI hope you're doing well! I'm reaching out regarding your video for ${brand}. I wanted to remind you that your video was approved.\n\nWe haven't seen the post go live just yet, and wanted to send a quick reminder to please publish your video when you have a moment.\n\nIf you've already posted, feel free to send the link my way so I can update our records. If you're experiencing any delays, just let me know!\n\nThank you again for your participation! We really appreciate you and all your hard work.\n\nBest,\nTaylor`;
+  } else if (type === 'approval') {
+    subject = `${brand}: Video Approved!`;
+    body = `Hi ${firstName},\n\nGreat news — your video for ${brand} has been approved! 🎉\n\nPlease post your video by ${postDue}.\n\nA few reminders before you post:\n• Make sure to include your invite/referral code: ${code}\n• Review the key copy points to ensure your caption includes accurate product information\n• Tag the brand appropriately per the video guidelines\n\nOnce you've posted, please send me the link so I can update our records.\n\nThank you so much for your hard work — we love the content!\n\nBest,\nTaylor`;
+  }
+  return { subject, body };
+}
+
+// Filter creators by who should receive a given email type
+function filterCreatorsFor(type, campaign) {
+  const dates = getEffectiveDates(campaign);
+  const creators = campaign.creators || [];
+  const overdue = dates.videoDue && daysLeft(dates.videoDue) < 0;
+
+  if (type === 'friday') {
+    return creators.filter(c => c.email && c.status !== 'Opt Out' && c.status !== 'Paused' && c.tracking);
+  } else if (type === 'reminder') {
+    return creators.filter(c => c.email && (c.status === 'Not Submitted' || c.status === 'Emailed'));
+  } else if (type === 'followup1' || type === 'followup2' || type === 'final') {
+    return creators.filter(c => c.email && (c.status === 'Not Submitted' || c.status === 'Emailed') && overdue);
+  } else if (type === 'post') {
+    return creators.filter(c => c.email && c.status === 'Approved');
+  } else if (type === 'approval') {
+    return creators.filter(c => c.email && c.status === 'Approved');
+  }
+  return [];
+}
+
+// ================================================================
+// MAILTO — opens Outlook with email pre-filled
+// ================================================================
+function openMailto(email, subject, body) {
+  const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  // Use window.location rather than window.open for single-email case
+  window.location.href = href;
+}
+
+let currentModalEmail = null;
+function openEmailModal(type, creator, campaign) {
+  const { subject, body } = buildEmail(type, creator, campaign);
+  currentModalEmail = { email: creator.email, subject, body };
+  document.getElementById('modal-title').textContent = `Email: ${creator.name}`;
+  document.getElementById('modal-subtitle').textContent = 'Review, edit if needed, then open in Outlook.';
+  document.getElementById('modal-to').value = creator.email;
+  document.getElementById('modal-subject').value = subject;
+  document.getElementById('modal-body').value = body;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  currentModalEmail = null;
+}
+
+function openInOutlook() {
+  const email = document.getElementById('modal-to').value;
+  const subject = document.getElementById('modal-subject').value;
+  const body = document.getElementById('modal-body').value;
+  const bcc = currentModalEmail && currentModalEmail.bcc ? currentModalEmail.bcc : '';
+
+  let href = `mailto:${encodeURIComponent(email)}`;
+  const params = [];
+  if (bcc) params.push(`bcc=${encodeURIComponent(bcc)}`);
+  if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+  if (body) params.push(`body=${encodeURIComponent(body)}`);
+  if (params.length) href += '?' + params.join('&');
+
+  window.location.href = href;
+  closeModal();
+}
+
+function openCreatorEmailMenu(creatorId, event) {
+  const c = getActiveCampaign();
+  if (!c) return;
+  const cr = c.creators.find(x => x.id === creatorId);
+  if (!cr) return;
+  if (!cr.email) {
+    alert(`No email on file for ${cr.name}. Add their email in the row first.`);
+    return;
+  }
+
+  // Close any open menu
+  const existing = document.getElementById('email-menu-popover');
+  if (existing) existing.remove();
+
+  // Create popover
+  const menu = document.createElement('div');
+  menu.id = 'email-menu-popover';
+  menu.className = 'email-popover';
+  const options = [
+    { type: 'friday', label: '✉ Friday tracking', desc: 'Tracking # + Typeform + deadlines' },
+    { type: 'reminder', label: '✉ Wednesday reminder', desc: 'Day before video due' },
+    { type: 'approval', label: '✉ Approval', desc: 'Video approved — post by date + reminders' },
+    { type: 'followup1', label: 'Late follow-up #1', desc: 'Gentle, after missed deadline' },
+    { type: 'followup2', label: 'Follow-up #2', desc: 'Firmer tone' },
+    { type: 'final', label: 'Final notice', desc: 'Warns about pause' },
+    { type: 'post', label: 'Missing post reminder', desc: 'After approval' },
+  ];
+  menu.innerHTML = `
+    <div class="email-popover-header">Email ${esc(cr.name)}</div>
+    ${options.map(o => `
+      <button class="email-popover-item" data-type="${o.type}">
+        <div class="email-popover-label">${o.label}</div>
+        <div class="email-popover-desc">${o.desc}</div>
+      </button>
+    `).join('')}
+  `;
+
+  // Position the menu near the clicked button
+  if (event && event.target) {
+    const btn = event.target.closest('button');
+    const rect = btn.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+  } else {
+    menu.style.position = 'fixed';
+    menu.style.top = '50%';
+    menu.style.left = '50%';
+    menu.style.transform = 'translate(-50%, -50%)';
+  }
+
+  document.body.appendChild(menu);
+
+  // Wire up option clicks
+  menu.querySelectorAll('.email-popover-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      menu.remove();
+      openEmailModal(type, cr, c);
+    });
+  });
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!menu.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    });
+  }, 0);
+}
+
+function bulkSend(type) {
+  const c = getActiveCampaign();
+  if (!c) return;
+  if (!c.fgfDate) { alert('Please set an FGF date first.'); return; }
+  if (!c.brand) { alert('Please set a brand name first.'); return; }
+
+  const eligible = filterCreatorsFor(type, c);
+  if (eligible.length === 0) {
+    const msg = {
+      friday: 'No creators eligible — check that they have tracking numbers and are not opted out.',
+      reminder: 'No creators currently have status "Not Submitted" or "Emailed".',
+      approval: 'No creators have status "Approved".',
+      followup1: 'No overdue non-submitters.',
+      followup2: 'No overdue non-submitters.',
+      final: 'No overdue non-submitters.',
+      post: 'No creators have status "Approved".'
+    };
+    alert(msg[type] || 'No eligible creators.');
+    return;
+  }
+
+  const typeLabel = {
+    friday: 'Friday tracking',
+    reminder: 'Wednesday reminder',
+    approval: 'Approval',
+    followup1: 'Follow-up #1',
+    followup2: 'Follow-up #2',
+    final: 'Final notice',
+    post: 'Missing post reminder'
+  }[type];
+
+  // For Friday tracking — each creator needs their own tracking number so we
+  // keep individual sends. For everything else, open one email with all in BCC.
+  if (type === 'friday') {
+    // Individual sends — each creator has unique tracking #
+    showToast(`Opening ${eligible.length} individual tracking emails…`);
+    eligible.forEach((cr, i) => {
+      setTimeout(() => {
+        const { subject, body } = buildEmail(type, cr, c);
+        const href = `mailto:${encodeURIComponent(cr.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = href;
+        document.body.appendChild(iframe);
+        setTimeout(() => iframe.remove(), 2000);
+      }, i * 600);
+    });
+  } else {
+    // BCC send — one email, everyone in BCC, body uses first eligible creator as template
+    const bccEmails = eligible.map(cr => cr.email).filter(Boolean).join(',');
+    const { subject, body } = buildEmail(type, eligible[0], c);
+
+    // Show in the email modal so user can review before opening Outlook
+    document.getElementById('modal-title').textContent = `${typeLabel} — ${eligible.length} creators`;
+    document.getElementById('modal-subtitle').textContent =
+      `All ${eligible.length} creators will be in BCC. Review and click "Open in Outlook".`;
+    document.getElementById('modal-to').value = '';
+    document.getElementById('modal-to').placeholder = '(leave To blank — recipients are in BCC)';
+    document.getElementById('modal-subject').value = subject;
+    // Replace first name with a generic greeting for BCC
+    const bccBody = body.replace(/^Hi \w+,/m, 'Hi,');
+    document.getElementById('modal-body').value = bccBody;
+    currentModalEmail = { email: '', bcc: bccEmails, subject, body: bccBody };
+    document.getElementById('modal').classList.add('active');
+  }
+}
+
+// ================================================================
+// OVERVIEW
+// ================================================================
+function renderOverview() {
+  const now = new Date();
+  const currentYear = String(now.getFullYear());
+  const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
+  // Show current month's campaigns, main FGF only by default
+  const visible = state.campaigns.filter(c => {
+    if (!c.fgfDate) return false;
+    if (c.fgfDate.slice(0, 4) !== currentYear) return false;
+    if (c.fgfDate.slice(5, 7) !== currentMonth) return false;
+    if (state.filters && state.filters.type === 'main' && c.type === 'bonus') return false;
+    if (state.filters && state.filters.type === 'bonus' && c.type === 'main') return false;
+    return true;
+  });
+
+  document.getElementById('stat-campaigns').textContent = visible.length;
+
+  let late = 0, awaitPost = 0;
+  visible.forEach(c => {
+    const dates = getEffectiveDates(c);
+    const overdue = dates.videoDue && daysLeft(dates.videoDue) < 0;
+    (c.creators || []).forEach(cr => {
+      if ((cr.status === 'Not Submitted' || cr.status === 'Emailed') && overdue) late++;
+      if (cr.status === 'Approved') awaitPost++;
+    });
+  });
+  document.getElementById('stat-late').textContent = late;
+  document.getElementById('stat-await').textContent = awaitPost;
+
+  const grid = document.getElementById('campaigns-overview');
+  grid.innerHTML = '';
+
+  if (visible.length === 0) {
+    // Show a helpful message with current month name
+    const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    grid.innerHTML = `<div class="empty" style="grid-column: 1 / -1;"><div class="big">No campaigns in ${monthName}</div><div>Upload the Beauty Pass calendar or create a campaign manually</div></div>`;
+    return;
+  }
+
+  // Sort upcoming first, then by fgfDate ascending
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const sorted = [...visible].sort((a, b) => (a.fgfDate || '').localeCompare(b.fgfDate || ''));
+
+  sorted.forEach(c => {
+    const dates = getEffectiveDates(c);
+    const creators = c.creators || [];
+    const submitted = creators.filter(cr => ['Submitted','Approved','Posted','Reviewing'].includes(cr.status)).length;
+    const overdueCount = creators.filter(cr => (cr.status === 'Not Submitted' || cr.status === 'Emailed') && dates.videoDue && daysLeft(dates.videoDue) < 0).length;
+    const pct = creators.length ? Math.round((submitted / creators.length) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = `camp-card ${c.type}`;
+    card.innerHTML = `
+      <span class="camp-tag ${c.type}">${c.type === 'main' ? 'Main FGF' : 'Bonus FGF'}</span>
+      <div class="camp-brand">${esc(c.brand || 'Untitled')}</div>
+      <div class="camp-dates">${c.fgfDate ? 'Due ' + fmtDate(dates.videoDue) : 'No date set'}</div>
+      <div class="camp-progress">
+        <div class="camp-bar"><div class="camp-bar-fill" style="width: ${pct}%;"></div></div>
+        <span><strong>${submitted}</strong>/${creators.length}</span>
+      </div>
+      <div class="camp-meta">
+        <span><strong>${submitted}</strong> submitted</span>
+        ${overdueCount > 0 ? `<span style="color: var(--late);"><strong>${overdueCount}</strong> late</span>` : ''}
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      state.activeCampaignId = c.id;
+      saveState();
+      document.querySelector('[data-tab="campaigns"]').click();
+    });
+    grid.appendChild(card);
+  });
+
+  // Render what's missing below the campaign cards — search ALL campaigns, not just this month
+  renderWhatsMissing();
+}
+
+// ================================================================
+// BACKUP / RESTORE
+// ================================================================
+function exportBackup() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `creator-network-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup() {
+  document.getElementById('import-file').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      state = data;
+      if (!state.filters) state.filters = { year: null, month: '', type: 'main' };
+      saveState();
+      renderRoster();
+      renderCampaignsList();
+      renderOverview();
+      showToast('Backup restored');
+    } catch (err) {
+      alert('Could not read backup file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ================================================================
+// UTIL
+// ================================================================
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ================================================================
+// IMPORT — file upload and paste for calendar + creators
+// ================================================================
+let importState = {
+  mode: null,         // 'calendar', 'comp-list', 'roster'
+  parsedData: null,   // array of parsed rows
+};
+
+function openCalendarUpload() {
+  importState = { mode: 'calendar', parsedData: null };
+  document.getElementById('import-title').textContent = 'Upload Beauty Pass calendar';
+  document.getElementById('import-subtitle').textContent = 'Drop the Beauty Pass calendar Excel file — any year sheet. Campaigns will be added to your dashboard.';
+  document.getElementById('paste-hint').textContent = 'Paste rows with: Date, FGF type (FGF or Bonus), Brand. Tab or comma separated.';
+  document.getElementById('import-paste-input').placeholder = 'Date\tFGF\tBrand\n2026-05-01\tFGF\tNeostrata\n2026-05-08\tBonus\tDrunk Elephant';
+  resetImportUI();
+  document.getElementById('import-modal').classList.add('active');
+}
+
+function openCompListUpload() {
+  const c = getActiveCampaign();
+
+  if (!c) {
+    // No campaign active — show campaign picker inside the modal
+    if (state.campaigns.length === 0) {
+      showToast('Create a campaign first');
+      return;
+    }
+    // Open the modal in "pick campaign" mode
+    importState = { mode: 'comp-list', parsedData: null };
+    document.getElementById('import-title').textContent = 'Upload comp list — pick a campaign';
+    document.getElementById('import-subtitle').textContent = 'Choose which campaign this comp list belongs to, then drop your file.';
+    resetImportUI();
+
+    // Replace the dropzone with a campaign picker + dropzone combo
+    const fileMode = document.getElementById('import-file-mode');
+    const sorted = state.campaigns
+      .slice()
+      .sort((a, b) => (b.fgfDate || '').localeCompare(a.fgfDate || ''))
+      .filter(c => !c.fgfDate || c.fgfDate.slice(0, 4) >= '2026');
+
+    fileMode.innerHTML = `
+      <div class="field" style="margin-bottom: 14px;">
+        <label>Campaign</label>
+        <select id="comp-campaign-picker" style="width:100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: var(--body); font-size: 14px; background: var(--card); color: var(--ink);">
+          <option value="">— Select a campaign first —</option>
+          ${sorted.map(c => `<option value="${c.id}">${esc(c.brand || 'Untitled')}${c.fgfDate ? ' — ' + fmtDate(c.fgfDate) : ''}</option>`).join('')}
+        </select>
+      </div>
+      <div id="import-dropzone" style="border: 2px dashed var(--line); border-radius: 12px; padding: 32px 20px; text-align: center; background: var(--paper-warm); opacity: 0.4; pointer-events: none;">
+        <div style="font-family: var(--display); font-size: 18px; font-weight: 500; margin-bottom: 6px;">Select a campaign above first</div>
+        <div style="font-size: 13px; color: var(--muted);">Then drop your comp list here or click to browse</div>
+        <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none;" />
+      </div>
+    `;
+
+    // Re-wire dropzone after rebuilding it
+    rewireDropzone();
+
+    // When campaign is picked, enable the dropzone and set the active campaign
+    document.getElementById('comp-campaign-picker').addEventListener('change', (e) => {
+      const picked = state.campaigns.find(c => c.id === e.target.value);
+      if (picked) {
+        state.activeCampaignId = picked.id;
+        document.getElementById('import-title').textContent = `Upload comp list for ${picked.brand || 'this campaign'}`;
+        // Enable the dropzone now that a campaign is selected
+        const dz = document.getElementById('import-dropzone');
+        dz.style.opacity = '1';
+        dz.style.pointerEvents = 'auto';
+        dz.style.cursor = 'pointer';
+        dz.querySelector('div').textContent = 'Drop comp list here';
+        dz.querySelectorAll('div')[1].textContent = 'or click to browse — .xlsx, .xls, .csv';
+        rewireDropzone();
+      }
+    });
+
+    document.getElementById('import-modal').classList.add('active');
+    return;
+  }
+
+  // Campaign already active — go straight to upload
+  importState = { mode: 'comp-list', parsedData: null };
+  document.getElementById('import-title').textContent = `Upload comp list for ${c.brand || 'this campaign'}`;
+  document.getElementById('import-subtitle').textContent = 'Matches by name. Fills tracking numbers. Anyone NOT on this list is removed from campaign + roster.';
+  document.getElementById('paste-hint').textContent = 'Paste columns: Name, Tracking. Tab or comma separated.';
+  document.getElementById('import-paste-input').placeholder = 'Name\tTracking\nTaylor Silva\t4.91460047136E11';
+  resetImportUI();
+  document.getElementById('import-modal').classList.add('active');
+}
+
+function rewireDropzone() {
+  const dropzone = document.getElementById('import-dropzone');
+  const fileInput = document.getElementById('import-file-input');
+  if (!dropzone || !fileInput) return;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleImportFile(file);
+  });
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImportFile(file);
+  });
+}
+
+function openTypeformUpload() {
+  const c = getActiveCampaign();
+  if (!c) { showToast('Open a campaign first'); return; }
+  importState = { mode: 'typeform', parsedData: null };
+  document.getElementById('import-title').textContent = `Upload Typeform responses — ${c.brand || 'this campaign'}`;
+  document.getElementById('import-subtitle').textContent = 'Download responses from Typeform (Results → Export → CSV). Upload here to mark creators as Submitted and save their video links.';
+  document.getElementById('paste-hint').textContent = 'Paste the CSV rows from Typeform. Needs at least an email or name column plus a video link column.';
+  document.getElementById('import-paste-input').placeholder = 'Start Date\tSubmit Date\tEmail\tVideo link\tOpt out?\n2026-05-01\t2026-05-01\ttaylorbsilva@gmail.com\thttps://drive.google.com/...\tNo';
+  resetImportUI();
+  document.getElementById('import-modal').classList.add('active');
+}
+
+// ---------- TYPEFORM CSV parsing ----------
+function parseTypeformRows(rows) {
+  if (rows.length < 2) { showToast('No rows found'); return; }
+
+  // Typeform CSVs have a header row — find it
+  const header = (rows[0] || []).map(h => String(h || '').toLowerCase().trim());
+
+  // Identify columns — Typeform uses flexible column names depending on your questions
+  const emailCol   = header.findIndex(h => h.includes('email'));
+  const nameCol    = header.findIndex(h => h === 'name' || h === 'full name' || h === 'your name');
+  const submitCol  = header.findIndex(h => h === 'submit date' || h === 'submitted at' || h === 'submitdate');
+  const optOutCol  = header.findIndex(h => h.includes('opt') && h.includes('out'));
+
+  // Video link — look for any column that has "link", "video", "url", or "submission"
+  const linkCol = header.findIndex(h =>
+    h.includes('link') || h.includes('video') || h.includes('url') || h.includes('submission') || h.includes('drive') || h.includes('icloud') || h.includes('box')
+  );
+
+  // If we can't find a clear link column, show all columns and let user see the preview
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i] || [];
+    if (!row.length || row.every(c => !c)) continue;
+
+    const email    = emailCol  >= 0 ? String(row[emailCol]  || '').trim() : '';
+    const name     = nameCol   >= 0 ? String(row[nameCol]   || '').trim() : '';
+    const submitAt = submitCol >= 0 ? String(row[submitCol] || '').trim() : '';
+    const optOut   = optOutCol >= 0 ? String(row[optOutCol] || '').toLowerCase().trim() : '';
+    const link     = linkCol   >= 0 ? String(row[linkCol]   || '').trim() : '';
+
+    // Also scan ALL columns for something that looks like a video link
+    let videoLink = link;
+    if (!videoLink) {
+      for (const cell of row) {
+        const val = String(cell || '').trim();
+        if (val.match(/^https?:\/\/(drive\.google|icloud|app\.box|dropbox|vimeo|youtu)/i)) {
+          videoLink = val;
+          break;
+        }
+      }
+    }
+
+    const isOptOut = optOut === 'yes' || optOut === 'true' || optOut === 'opt out';
+
+    if (!email && !name) continue;
+
+    parsed.push({ email, name, submitAt, videoLink, isOptOut });
+  }
+
+  if (parsed.length === 0) {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 16px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">
+        <strong>Could not find any response rows.</strong><br><br>
+        Make sure you're uploading the CSV exported from Typeform (Results tab → Export → Download CSV).<br><br>
+        Columns found: ${header.slice(0, 8).map(h => '<code>' + esc(h) + '</code>').join(', ')}
+      </div>
+    `;
+    return;
+  }
+
+  importState.parsedData = parsed;
+  showTypeformPreview(parsed);
+}
+
+function showTypeformPreview(rows) {
+  const c = getActiveCampaign();
+  if (!c) return;
+
+  const preview = document.getElementById('import-preview');
+  if (!preview) return;
+
+  const normalize = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const creators = c.creators || [];
+
+  // Match each response to a creator
+  const matched = rows.map(r => {
+    let creator = null;
+    if (r.email) creator = creators.find(cr => cr.email && cr.email.toLowerCase() === r.email.toLowerCase());
+    if (!creator && r.name) creator = creators.find(cr => normalize(cr.name) === normalize(r.name));
+    return { ...r, creator };
+  });
+
+  const matchCount   = matched.filter(r => r.creator).length;
+  const optOutCount  = matched.filter(r => r.isOptOut).length;
+  const linkCount    = matched.filter(r => r.videoLink && !r.isOptOut).length;
+  const noMatchCount = matched.filter(r => !r.creator).length;
+
+  preview.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+      <div style="font-family:var(--display); font-size:16px; font-weight:500;">Typeform responses preview</div>
+      <div style="font-size:12px; color:var(--muted);">${matchCount} matched, ${noMatchCount} unmatched</div>
+    </div>
+    <div class="preview-table">
+      <table><thead><tr><th>Name / Email</th><th>Video link</th><th>Action</th><th>Match</th></tr></thead><tbody id="tf-preview-body"></tbody></table>
+    </div>
+  `;
+
+  const tbody = preview.querySelector('#tf-preview-body');
+  matched.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.isOptOut) tr.style.background = 'var(--off-bg)';
+    else if (!r.creator) tr.style.background = 'var(--warn-bg)';
+    tr.innerHTML = `
+      <td>
+        <div style="font-weight:500; font-size:13px;">${esc(r.name || r.email || '—')}</div>
+        ${r.name && r.email ? `<div style="font-size:11px; color:var(--muted);">${esc(r.email)}</div>` : ''}
+      </td>
+      <td style="font-size:11px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        ${r.videoLink ? `<a href="${esc(r.videoLink)}" target="_blank" style="color:var(--accent-ink);">${esc(r.videoLink.replace('https://', ''))}</a>` : '—'}
+      </td>
+      <td>
+        ${r.isOptOut
+          ? '<span class="missing-tag opt-out">Opt out</span>'
+          : r.videoLink
+            ? '<span class="missing-tag no-video" style="background:var(--ok-bg);color:var(--ok);">Submitted</span>'
+            : '<span style="font-size:11px;color:var(--muted);">No link</span>'}
+      </td>
+      <td style="font-size:11px;">
+        ${r.creator
+          ? `<span style="color:var(--ok);">✓ ${esc(r.creator.name)}</span>`
+          : '<span style="color:var(--warn);">No match</span>'}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('import-confirm-btn').classList.remove('hidden');
+  document.getElementById('import-confirm-btn').textContent =
+    `Apply — mark ${linkCount} submitted, ${optOutCount} opted out`;
+}
+
+function openRosterUpload() {
+  importState = { mode: 'roster', parsedData: null };
+  document.getElementById('import-title').textContent = 'Upload master roster';
+  document.getElementById('import-subtitle').textContent = 'Uploads your full creator list. Anyone NOT on this file is removed from the roster AND from all campaign creator lists (and from "What\'s missing").';
+  document.getElementById('paste-hint').textContent = 'Paste columns: Name, Email, Account, Invite Code. Tab or comma separated.';
+  document.getElementById('import-paste-input').placeholder = 'Name\tEmail\tAccount\tInvite Code\nTaylor Silva\ttaylorbsilva@gmail.com\t@makeupbytayb3\tTAYLORBP2024';
+  resetImportUI();
+  document.getElementById('import-modal').classList.add('active');
+}
+
+function openTrackerUpload() {
+  importState = { mode: 'tracker', parsedData: null };
+  document.getElementById('import-title').textContent = 'Upload Creator Network tracker';
+  document.getElementById('import-subtitle').textContent = 'Drop your tracker sheet (the one with FGF - [Brand] tabs). Each tab becomes a campaign with all its creators, statuses, tracking numbers, and post links.';
+  document.getElementById('paste-hint').textContent = 'Paste mode not supported for tracker — needs to be uploaded as a file to read the tabs.';
+  document.getElementById('import-paste-input').placeholder = '';
+  resetImportUI();
+  // Disable paste mode for this type
+  document.querySelector('#import-switch button[data-mode="paste"]').disabled = true;
+  document.getElementById('import-modal').classList.add('active');
+}
+
+function resetImportUI() {
+  // Rebuild preview inner structure (in case it got replaced by an error)
+  const preview = document.getElementById('import-preview');
+  preview.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+      <div style="font-family: var(--display); font-size: 16px; font-weight: 500;" id="import-preview-title">Preview</div>
+      <div style="font-size: 12px; color: var(--muted);" id="import-preview-count"></div>
+    </div>
+    <div class="preview-table">
+      <table id="import-preview-table"><thead></thead><tbody></tbody></table>
+    </div>
+  `;
+  preview.classList.add('hidden');
+  document.getElementById('import-confirm-btn').classList.add('hidden');
+  document.getElementById('import-paste-input').value = '';
+  document.getElementById('import-file-input').value = '';
+  // Reset mode to file
+  document.querySelectorAll('#import-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === 'file');
+    b.disabled = false;
+  });
+  document.getElementById('import-file-mode').classList.remove('hidden');
+  document.getElementById('import-paste-mode').classList.add('hidden');
+  // Re-wire dropzone in case it was rebuilt
+  rewireDropzone();
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('active');
+  importState = { mode: null, parsedData: null };
+}
+
+// Tab switch between file/paste
+document.querySelectorAll('#import-switch button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#import-switch button').forEach(b => b.classList.toggle('active', b === btn));
+    const mode = btn.dataset.mode;
+    document.getElementById('import-file-mode').classList.toggle('hidden', mode !== 'file');
+    document.getElementById('import-paste-mode').classList.toggle('hidden', mode !== 'paste');
+  });
+});
+
+// Drag and drop — wire up the initial dropzone (rewired whenever the modal rebuilds it)
+rewireDropzone();
+
+function handleImportFile(file) {
+  if (!file) {
+    alert('No file received.');
+    return;
+  }
+
+  // Show loading state
+  document.getElementById('import-preview').classList.remove('hidden');
+  document.getElementById('import-preview').innerHTML = `
+    <div style="padding: 20px; text-align: center; color: var(--muted);">
+      <div style="font-family: var(--display); font-size: 16px; margin-bottom: 8px;">Reading file…</div>
+      <div style="font-size: 12px;" id="import-status">Loading ${esc(file.name)} (${Math.round(file.size/1024)} KB)</div>
+    </div>
+  `;
+
+  // Check the library loaded
+  if (typeof XLSX === 'undefined') {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 20px; background: var(--late-bg); border-radius: 8px; color: var(--late);">
+        <strong>File reader library didn't load.</strong><br><br>
+        This usually means your work network blocks <span style="font-family: monospace;">cdnjs.cloudflare.com</span>.<br><br>
+        <strong>Workaround:</strong> Click "Paste rows" above. Open your Excel file, select the rows you want (including headers), copy (Ctrl+C), and paste them in. That works without the library.
+      </div>
+    `;
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onerror = () => {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 20px; background: var(--late-bg); border-radius: 8px; color: var(--late);">
+        <strong>Could not read the file.</strong> Try saving it as .xlsx first, or use the Paste tab.
+      </div>
+    `;
+  };
+  reader.onload = (e) => {
+    try {
+      const parseStatusEl = document.getElementById('import-status');
+      if (parseStatusEl) parseStatusEl.textContent = 'Parsing workbook…';
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+      if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+        document.getElementById('import-preview').innerHTML = `
+          <div style="padding: 20px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">
+            The file opened but contained no sheets. Try resaving as .xlsx.
+          </div>
+        `;
+        return;
+      }
+
+      // Show what was found (import-status may not exist if preview was rebuilt)
+      const statusEl = document.getElementById('import-status');
+      if (statusEl) statusEl.textContent =
+        `Found ${workbook.SheetNames.length} sheet(s): ${workbook.SheetNames.slice(0, 5).join(', ')}${workbook.SheetNames.length > 5 ? '…' : ''}`;
+
+      if (importState.mode === 'calendar') {
+        parseCalendarWorkbook(workbook);
+      } else if (importState.mode === 'tracker') {
+        parseTrackerWorkbook(workbook);
+      } else if (importState.mode === 'typeform') {
+        // Parse Typeform CSV — use first sheet, treat as flat rows
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
+        parseTypeformRows(rows);
+      } else {
+        parseCreatorWorkbook(workbook);
+      }
+    } catch (err) {
+      console.error('Import error:', err);
+      document.getElementById('import-preview').innerHTML = `
+        <div style="padding: 20px; background: var(--late-bg); border-radius: 8px; color: var(--late);">
+          <strong>Could not read this file.</strong><br><br>
+          Error: ${esc(err.message)}<br><br>
+          Try the "Paste rows" tab — copy the rows from Excel and paste them directly.
+        </div>
+      `;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ---------- CALENDAR parsing ----------
+function parseCalendarWorkbook(workbook) {
+  // Find sheets that contain a 4-digit year — handles "2026 BOM", "2026", "BOM 2026", etc.
+  const candidateSheets = workbook.SheetNames.filter(n => /\b20\d{2}\b/.test(n));
+
+  if (candidateSheets.length === 0) {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 20px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">
+        <strong>Found ${workbook.SheetNames.length} sheet(s) but none contained a year.</strong><br><br>
+        Sheet names: ${workbook.SheetNames.slice(0,8).map(esc).join(', ')}${workbook.SheetNames.length > 8 ? '…' : ''}<br><br>
+        My parser looks for sheets with a year in the name (like "2026 BOM" or "2026"). Is this the right file?
+      </div>
+    `;
+    return;
+  }
+
+  const allRows = [];
+  const diagnostics = [];
+
+  candidateSheets.forEach(sheetName => {
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' });
+
+    if (rows.length === 0) {
+      diagnostics.push(`<strong>${esc(sheetName)}</strong>: empty sheet`);
+      return;
+    }
+
+    // Find header row — look for a row containing both "Date" and "Brand"
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      const row = rows[i] || [];
+      const joined = row.map(c => String(c || '').toLowerCase()).join('|');
+      if (joined.includes('date') && joined.includes('brand')) {
+        headerIdx = i;
+        break;
+      }
+    }
+    if (headerIdx === -1) {
+      const firstRow = (rows[0] || []).slice(0, 5).map(c => String(c || '').slice(0, 30)).join(' / ');
+      diagnostics.push(`<strong>${esc(sheetName)}</strong>: no header row with Date + Brand. First row: <span style="font-family: monospace; font-size: 11px;">${esc(firstRow)}</span>`);
+      return;
+    }
+
+    const header = rows[headerIdx].map(h => String(h || '').toLowerCase().trim());
+    const dateCol = header.findIndex(h => h === 'date');
+    const fgfCol = header.findIndex(h => h === 'fgf' || h === 'type');
+    const brandCol = header.findIndex(h => h === 'brand');
+
+    if (dateCol === -1 || brandCol === -1) {
+      diagnostics.push(`<strong>${esc(sheetName)}</strong>: missing Date or Brand column. Found: ${header.slice(0, 8).map(esc).join(', ')}`);
+      return;
+    }
+
+    let sheetCount = 0;
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i] || [];
+      const rawDate = row[dateCol];
+      const rawFgf = fgfCol >= 0 ? String(row[fgfCol] || '').trim() : '';
+      const rawBrand = brandCol >= 0 ? String(row[brandCol] || '').trim() : '';
+
+      if (!rawDate || !rawBrand || rawBrand === '-' || rawBrand === '') continue;
+
+      const dateStr = parseDate(rawDate);
+      if (!dateStr) continue;
+
+      // Determine type — FGF/Main vs Bonus
+      const fgfLower = rawFgf.toLowerCase();
+      let type = 'main';
+      if (fgfLower.includes('bonus')) type = 'bonus';
+      else if (fgfLower === '' || fgfLower === '-') continue;
+
+      const brandClean = rawBrand.split('\n')[0].trim();
+      if (!brandClean) continue;
+
+      allRows.push({
+        date: dateStr,
+        type: type,
+        brand: brandClean,
+        sheet: sheetName
+      });
+      sheetCount++;
+    }
+    diagnostics.push(`<strong>${esc(sheetName)}</strong>: ${sheetCount} campaigns`);
+  });
+
+  if (allRows.length === 0) {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 20px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">
+        <strong>Found year sheets but no campaigns came out.</strong><br><br>
+        ${diagnostics.join('<br>')}<br><br>
+        <em>Try the Paste tab — copy the rows from Excel directly.</em>
+      </div>
+    `;
+    return;
+  }
+
+  allRows.sort((a, b) => a.date.localeCompare(b.date));
+  importState.parsedData = allRows;
+  showCalendarPreview(allRows);
+}
+
+function parseDate(raw) {
+  if (!raw) return null;
+  // Date object
+  if (raw instanceof Date) {
+    const y = raw.getFullYear();
+    const m = String(raw.getMonth() + 1).padStart(2, '0');
+    const d = String(raw.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  // String
+  const s = String(raw).trim();
+  // Try ISO format (2026-05-01)
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // Try slash format with 4-digit year (5/1/2026 or 05/01/2026)
+  const slash4 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slash4) {
+    const m = String(slash4[1]).padStart(2, '0');
+    const d = String(slash4[2]).padStart(2, '0');
+    return `${slash4[3]}-${m}-${d}`;
+  }
+  // Try slash format with 2-digit year (1/2/26 or 01/02/26)
+  const slash2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (slash2) {
+    const m = String(slash2[1]).padStart(2, '0');
+    const d = String(slash2[2]).padStart(2, '0');
+    // Years 00-69 → 2000-2069, years 70-99 → 1970-1999
+    const yy = parseInt(slash2[3], 10);
+    const yyyy = yy < 70 ? 2000 + yy : 1900 + yy;
+    return `${yyyy}-${m}-${d}`;
+  }
+  // Try dash format (5-1-2026, 5-1-26)
+  const dash = s.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
+  if (dash) {
+    const m = String(dash[1]).padStart(2, '0');
+    const d = String(dash[2]).padStart(2, '0');
+    let yyyy = parseInt(dash[3], 10);
+    if (yyyy < 100) yyyy = yyyy < 70 ? 2000 + yyyy : 1900 + yyyy;
+    return `${yyyy}-${m}-${d}`;
+  }
+  // Excel serial number
+  const num = parseFloat(s);
+  if (!isNaN(num) && num > 40000 && num < 60000) {
+    const excelEpoch = new Date(1899, 11, 30);
+    const d = new Date(excelEpoch.getTime() + num * 86400000);
+    const y = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const da = String(d.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${da}`;
+  }
+  return null;
+}
+
+function showCalendarPreview(rows) {
+  const preview = document.getElementById('import-preview');
+  if (!preview) return;
+
+  // Rebuild the preview structure fresh
+  preview.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+      <div style="font-family: var(--display); font-size: 16px; font-weight: 500;" id="import-preview-title">Preview</div>
+      <div style="font-size: 12px; color: var(--muted);" id="import-preview-count"></div>
+    </div>
+    <div class="preview-table">
+      <table id="import-preview-table"><thead></thead><tbody></tbody></table>
+    </div>
+  `;
+
+  const title = preview.querySelector('#import-preview-title');
+  const count  = preview.querySelector('#import-preview-count');
+  const thead  = preview.querySelector('#import-preview-table thead');
+  const tbody  = preview.querySelector('#import-preview-table tbody');
+
+  if (!title || !count || !thead || !tbody) return;
+
+  // Count existing campaigns that'd be duplicates
+  const existingKeys = new Set(state.campaigns.map(c => `${c.fgfDate}|${(c.brand || '').toLowerCase()}`));
+  const newCount = rows.filter(r => !existingKeys.has(`${r.date}|${r.brand.toLowerCase()}`)).length;
+  const dupCount = rows.length - newCount;
+
+  title.textContent = 'Calendar preview';
+  count.textContent = `${newCount} new, ${dupCount} already exist`;
+
+  thead.innerHTML = '<tr><th>Date</th><th>Type</th><th>Brand</th><th>Status</th></tr>';
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const isDup = existingKeys.has(`${r.date}|${r.brand.toLowerCase()}`);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fmtDate(r.date)}</td>
+      <td><span class="camp-tag ${r.type}" style="font-size: 9px; padding: 2px 6px;">${r.type === 'main' ? 'Main' : 'Bonus'}</span></td>
+      <td>${esc(r.brand)}</td>
+      <td>${isDup ? '<span style="color: var(--muted);">exists</span>' : '<span style="color: var(--ok);">new</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  preview.classList.remove('hidden');
+  document.getElementById('import-confirm-btn').classList.remove('hidden');
+  document.getElementById('import-confirm-btn').textContent = `Import ${newCount} campaign${newCount === 1 ? '' : 's'}`;
+}
+
+// ---------- TRACKER parsing (Creator Network tracking sheet) ----------
+function parseTrackerWorkbook(workbook) {
+  // Find sheets that look like campaign tabs — "FGF - Brand" pattern
+  const campaignSheets = workbook.SheetNames.filter(n => /^FGF\s*[-—]\s*.+/i.test(n.trim()));
+
+  if (campaignSheets.length === 0) {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 20px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">
+        <strong>No "FGF - Brand" tabs found.</strong><br><br>
+        Sheet names: ${workbook.SheetNames.slice(0, 8).map(esc).join(', ')}<br><br>
+        Expected tabs named like "FGF - Neostrata" or "FGF - Le Mieux".
+      </div>
+    `;
+    return;
+  }
+
+  const parsedCampaigns = [];
+  const diagnostics = [];
+
+  campaignSheets.forEach(sheetName => {
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
+    if (rows.length < 2) {
+      diagnostics.push(`${sheetName}: empty`);
+      return;
+    }
+
+    // Extract brand from sheet name — "FGF - Neostrata" → "Neostrata"
+    const brand = sheetName.replace(/^FGF\s*[-—]\s*/i, '').trim();
+
+    // Find header row (first row with "Name" and "Email")
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+      const joined = (rows[i] || []).map(c => String(c || '').toLowerCase()).join('|');
+      if (joined.includes('name') && joined.includes('email')) {
+        headerIdx = i;
+        break;
+      }
+    }
+    if (headerIdx === -1) {
+      diagnostics.push(`${sheetName}: no Name/Email header row`);
+      return;
+    }
+
+    const header = rows[headerIdx].map(h => String(h || '').toLowerCase().trim());
+    const nameCol = header.findIndex(h => h === 'name');
+    const emailCol = header.findIndex(h => h === 'email');
+    const accountCol = header.findIndex(h => h === 'account' || h === 'instagram');
+    const codeCol = header.findIndex(h => h === 'invite code' || h === 'code');
+    const trackingCol = header.findIndex(h => h === 'tracking #' || h.includes('tracking'));
+    const deliveredCol = header.findIndex(h => h === 'delivered');
+    const contentCol = header.findIndex(h => h === 'content');
+    const statusCol = header.findIndex(h => h === 'status');
+    const postedCol = header.findIndex(h => h === 'posted');
+    const linkCol = header.findIndex(h => h === 'link');
+    const notesCol = header.findIndex(h => h === 'notes');
+
+    const creators = [];
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i] || [];
+      const name = nameCol >= 0 ? String(row[nameCol] || '').trim() : '';
+      const email = emailCol >= 0 ? String(row[emailCol] || '').trim() : '';
+      if (!name && !email) continue;
+
+      // Determine unified status — combine Content, Status, Posted into one
+      const contentVal = contentCol >= 0 ? String(row[contentCol] || '').trim() : '';
+      const statusVal = statusCol >= 0 ? String(row[statusCol] || '').trim() : '';
+      const postedVal = postedCol >= 0 ? String(row[postedCol] || '').trim().toLowerCase() : '';
+      const isPosted = postedVal === 'true' || postedVal === 'yes';
+
+      let status = 'Not Submitted';
+      if (statusVal.toLowerCase() === 'opt out' || contentVal.toLowerCase() === 'opt out') {
+        status = 'Opt Out';
+      } else if (isPosted) {
+        status = 'Posted';
+      } else if (statusVal.toLowerCase() === 'approved') {
+        status = 'Approved';
+      } else if (statusVal.toLowerCase() === 'reviewing') {
+        status = 'Reviewing';
+      } else if (statusVal.toLowerCase() === 'needs revisions' || statusVal.toLowerCase() === 'needs revision') {
+        status = 'Needs Revisions';
+      } else if (contentVal.toLowerCase() === 'submitted') {
+        status = 'Submitted';
+      }
+
+      creators.push({
+        id: 'cc' + Date.now() + Math.random(),
+        name: name,
+        email: email,
+        inviteCode: codeCol >= 0 ? String(row[codeCol] || '').trim() : '',
+        account: accountCol >= 0 ? String(row[accountCol] || '').trim() : '',
+        tracking: trackingCol >= 0 ? String(row[trackingCol] || '').trim() : '',
+        status: status,
+        videoLink: linkCol >= 0 ? String(row[linkCol] || '').trim() : '',
+        notes: notesCol >= 0 ? String(row[notesCol] || '').trim() : ''
+      });
+    }
+
+    parsedCampaigns.push({
+      sheetName: sheetName,
+      brand: brand,
+      creators: creators
+    });
+    diagnostics.push(`${sheetName}: ${creators.length} creators`);
+  });
+
+  if (parsedCampaigns.length === 0) {
+    document.getElementById('import-preview').innerHTML = `
+      <div style="padding: 20px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">
+        <strong>Found FGF tabs but could not parse any creators.</strong><br><br>
+        ${diagnostics.join('<br>')}
+      </div>
+    `;
+    return;
+  }
+
+  importState.parsedData = parsedCampaigns;
+  showTrackerPreview(parsedCampaigns);
+}
+
+function showTrackerPreview(campaigns) {
+  const preview = document.getElementById('import-preview');
+  preview.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+      <div style="font-family: var(--display); font-size: 16px; font-weight: 500;">Tracker preview</div>
+      <div style="font-size: 12px; color: var(--muted);">${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} found</div>
+    </div>
+    <div style="padding: 10px 14px; background: var(--accent-soft); border-radius: 8px; font-size: 12px; color: var(--accent-ink); margin-bottom: 10px;">
+      Campaigns will be matched by brand name against Beauty Pass campaigns already on your dashboard. If a match is found, creators get merged into the existing campaign (with their status, tracking, and post links). If not, a new campaign is created without a date — you can set the date later.
+    </div>
+    <div class="preview-table">
+      <table><thead><tr><th>Brand</th><th>Creators</th><th>Status</th></tr></thead><tbody id="tracker-preview-body"></tbody></table>
+    </div>
+  `;
+
+  const tbody = document.getElementById('tracker-preview-body');
+  campaigns.forEach(camp => {
+    // Check if a campaign already exists with this brand (match 2026+ only)
+    const match = state.campaigns.find(c =>
+      (c.brand || '').toLowerCase().trim() === camp.brand.toLowerCase().trim() &&
+      (!c.fgfDate || c.fgfDate.slice(0, 4) >= '2026')
+    );
+    const submitted = camp.creators.filter(cr => ['Submitted','Approved','Posted','Reviewing'].includes(cr.status)).length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${esc(camp.brand)}</td>
+      <td>${camp.creators.length} (${submitted} submitted/approved/posted)</td>
+      <td>${match ? '<span style="color: var(--accent-ink);">merge into existing</span>' : '<span style="color: var(--ok);">new campaign</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('import-confirm-btn').classList.remove('hidden');
+  document.getElementById('import-confirm-btn').textContent = `Import ${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'}`;
+}
+function parseCreatorWorkbook(workbook) {
+  // Use first sheet
+  const firstSheet = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[firstSheet];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
+
+  parseCreatorRows(rows);
+}
+
+function parseCreatorRows(rows) {
+  if (rows.length === 0) {
+    alert('No rows found in the file.');
+    return;
+  }
+
+  // Find header row — looking for "name" or "tracking" in first 10 rows
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const joined = (rows[i] || []).map(c => String(c || '').toLowerCase()).join('|');
+    if (joined.includes('name') || joined.includes('tracking')) {
+      headerIdx = i;
+      break;
+    }
+  }
+
+  // If no header found, assume first row IS the data and guess columns
+  let header, dataStart;
+  if (headerIdx === -1) {
+    header = ['name', 'email', 'tracking'];
+    dataStart = 0;
+  } else {
+    header = (rows[headerIdx] || []).map(h => String(h || '').toLowerCase().trim());
+    dataStart = headerIdx + 1;
+  }
+
+  // Find each column — be flexible about exact wording
+  const nameCol = header.findIndex(h => h === 'name' || h === 'creator' || h === 'creator name');
+  const emailCol = header.findIndex(h => h.includes('email'));
+  const trackingCol = header.findIndex(h => h === 'tracking' || h === 'tracking #' || h.includes('tracking'));
+  const accountCol = header.findIndex(h => h === 'account' || h.includes('handle') || h.includes('instagram') || h === 'ig');
+  const codeCol = header.findIndex(h => h === 'invite code' || h === 'code' || h.includes('invite'));
+
+  const parsed = [];
+  for (let i = dataStart; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const name = nameCol !== -1 ? String(row[nameCol] || '').trim() : '';
+    const email = emailCol !== -1 ? String(row[emailCol] || '').trim() : '';
+    const tracking = trackingCol !== -1 ? String(row[trackingCol] || '').trim() : '';
+
+    // Need at least a name OR email to be useful
+    if (!name && !email) continue;
+
+    // Skip rows that look like summary rows (e.g. company names without people)
+    if (name && !email && !tracking && !row[accountCol]) {
+      // Probably a label row — skip if name has common company words
+      if (/^(attn|company|total|summary|subtotal)/i.test(name)) continue;
+    }
+
+    parsed.push({
+      name: name,
+      email: email,
+      tracking: tracking,
+      account: accountCol !== -1 ? String(row[accountCol] || '').trim() : '',
+      code: codeCol !== -1 ? String(row[codeCol] || '').trim() : ''
+    });
+  }
+
+  if (parsed.length === 0) {
+    alert('Found the file but could not parse any creator rows. Check that the file has a header row with columns like Name, Email, or Tracking.');
+    return;
+  }
+
+  importState.parsedData = parsed;
+  showCreatorPreview(parsed);
+}
+
+function showCreatorPreview(rows) {
+  // Always rebuild the preview structure fresh
+  const preview = document.getElementById('import-preview');
+  if (!preview) return;
+
+  preview.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+      <div style="font-family: var(--display); font-size: 16px; font-weight: 500;" id="import-preview-title">Preview</div>
+      <div style="font-size: 12px; color: var(--muted);" id="import-preview-count"></div>
+    </div>
+    <div class="preview-table">
+      <table id="import-preview-table"><thead></thead><tbody></tbody></table>
+    </div>
+  `;
+
+  // Query elements from the freshly built structure
+  const title = preview.querySelector('#import-preview-title');
+  const count  = preview.querySelector('#import-preview-count');
+  const thead  = preview.querySelector('#import-preview-table thead');
+  const tbody  = preview.querySelector('#import-preview-table tbody');
+
+  if (!title || !count || !thead || !tbody) return; // shouldn't happen but guard anyway
+
+  if (importState.mode === 'comp-list') {
+    const c = getActiveCampaign();
+    if (!c) {
+      preview.innerHTML = `<div style="padding: 16px; background: var(--warn-bg); border-radius: 8px; color: var(--warn);">No campaign selected. Please select a campaign first, then upload the comp list.</div>`;
+      return;
+    }
+    const existingCreators = c.creators || [];
+    const normalize = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+    // Figure out who's on the list, who's being updated, who's new, who's being removed
+    const incomingNames = new Set(rows.filter(r => r.name).map(r => normalize(r.name)));
+    const toRemove = existingCreators.filter(cr => cr.name && !incomingNames.has(normalize(cr.name)));
+
+    let updateCount = 0, newCount = 0, skipCount = 0;
+    rows.forEach(r => {
+      if (!r.name) { skipCount++; return; }
+      const match = existingCreators.find(cr => normalize(cr.name) === normalize(r.name));
+      if (match) updateCount++;
+      else newCount++;
+    });
+
+    title.textContent = 'Comp list preview';
+    const removeNote = toRemove.length > 0
+      ? `, <strong style="color: var(--late);">${toRemove.length} will be removed</strong> (not on this list)`
+      : '';
+    count.innerHTML = `${updateCount} update, ${newCount} new${skipCount ? `, ${skipCount} skipped` : ''}${removeNote}`;
+
+    // Show all rows: incoming first, then removed at the bottom
+    thead.innerHTML = '<tr><th>Name</th><th>Tracking</th><th>Email</th><th>Action</th></tr>';
+    tbody.innerHTML = '';
+
+    rows.forEach(r => {
+      if (!r.name) return;
+      const match = existingCreators.find(cr => normalize(cr.name) === normalize(r.name));
+      const email = r.email || (match ? match.email : '');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(r.name)}</td>
+        <td style="font-family: monospace; font-size: 11px;">${esc(r.tracking || '—')}</td>
+        <td style="font-size: 12px;">${esc(email || '—')}</td>
+        <td>${match
+          ? '<span style="color: var(--accent-ink);">update</span>'
+          : '<span style="color: var(--ok);">add</span>'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Show removals at the bottom with a visual separator
+    if (toRemove.length > 0) {
+      const sep = document.createElement('tr');
+      sep.innerHTML = `<td colspan="4" style="padding: 6px 10px; background: var(--late-bg); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--late); text-transform: uppercase;">Removing — not on this comp list</td>`;
+      tbody.appendChild(sep);
+      toRemove.forEach(cr => {
+        const tr = document.createElement('tr');
+        tr.style.background = 'var(--late-bg)';
+        tr.innerHTML = `
+          <td style="color: var(--late);">${esc(cr.name)}</td>
+          <td>—</td>
+          <td style="font-size: 12px; color: var(--muted);">${esc(cr.email || '—')}</td>
+          <td><span style="color: var(--late); font-weight: 500;">remove from campaign + roster</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('import-confirm-btn').textContent =
+      toRemove.length > 0
+        ? `Apply — add/update ${newCount + updateCount}, remove ${toRemove.length}`
+        : `Apply to ${c.brand || 'campaign'}`;
+  } else {
+    // roster — sync mode: show adds, updates, and removals
+    const normalize = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const incomingEmails = new Set(rows.filter(r => r.email).map(r => r.email.toLowerCase()));
+    const incomingNames  = new Set(rows.filter(r => r.name).map(r => normalize(r.name)));
+
+    // Who's being removed from roster
+    const rosterRemovals = state.roster.filter(r => {
+      const emailMatch = r.email && incomingEmails.has(r.email.toLowerCase());
+      const nameMatch  = r.name && incomingNames.has(normalize(r.name));
+      return !emailMatch && !nameMatch;
+    });
+
+    const existingEmails = new Set(state.roster.map(r => (r.email || '').toLowerCase()));
+    const addCount    = rows.filter(r => r.email && !existingEmails.has(r.email.toLowerCase())).length;
+    const updateCount = rows.filter(r => r.email && existingEmails.has(r.email.toLowerCase())).length;
+
+    title.textContent = 'Master roster sync preview';
+    const removeNote = rosterRemovals.length > 0
+      ? `, <strong style="color:var(--late);">${rosterRemovals.length} removed from roster + all campaigns</strong>`
+      : '';
+    count.innerHTML = `${addCount} new, ${updateCount} existing${removeNote}`;
+
+    thead.innerHTML = '<tr><th>Name</th><th>Email</th><th>Account</th><th>Action</th></tr>';
+    tbody.innerHTML = '';
+
+    rows.forEach(r => {
+      const isExisting = r.email && existingEmails.has(r.email.toLowerCase());
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(r.name || '—')}</td>
+        <td style="font-size:12px;">${esc(r.email || '—')}</td>
+        <td style="font-size:12px;">${esc(r.account || '—')}</td>
+        <td>${isExisting
+          ? '<span style="color: var(--muted);">keep</span>'
+          : '<span style="color: var(--ok);">add</span>'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if (rosterRemovals.length > 0) {
+      const sep = document.createElement('tr');
+      sep.innerHTML = `<td colspan="4" style="padding: 6px 10px; background: var(--late-bg); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--late); text-transform: uppercase;">Removing — not on this list</td>`;
+      tbody.appendChild(sep);
+      rosterRemovals.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.style.background = 'var(--late-bg)';
+        tr.innerHTML = `
+          <td style="color:var(--late);">${esc(r.name || '—')}</td>
+          <td style="font-size:12px; color:var(--muted);">${esc(r.email || '—')}</td>
+          <td>—</td>
+          <td><span style="color:var(--late); font-weight:500;">remove roster + all campaigns</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('import-confirm-btn').textContent =
+      rosterRemovals.length > 0
+        ? `Sync roster — add ${addCount}, remove ${rosterRemovals.length}`
+        : `Add ${addCount} to roster`;
+  }
+
+  preview.classList.remove('hidden');
+  document.getElementById('import-confirm-btn').classList.remove('hidden');
+}
+
+// ---------- Paste parsing ----------
+function parsePastedText() {
+  const text = document.getElementById('import-paste-input').value.trim();
+  if (!text) { alert('Paste some rows first.'); return; }
+
+  // Split into rows, then columns (tab or comma)
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const rows = lines.map(line => {
+    // Prefer tab split; fall back to comma if only one cell
+    let cells = line.split('\t');
+    if (cells.length === 1) cells = line.split(',').map(c => c.trim());
+    return cells;
+  });
+
+  if (importState.mode === 'calendar') {
+    // Expect: Date, Type (FGF/Bonus), Brand
+    const parsed = [];
+    // Check if first row is header
+    const firstRowLower = rows[0].map(c => String(c).toLowerCase());
+    const hasHeader = firstRowLower.some(c => c.includes('date') || c.includes('brand') || c.includes('fgf'));
+    const start = hasHeader ? 1 : 0;
+
+    for (let i = start; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.length < 2) continue;
+      const dateStr = parseDate(row[0]);
+      if (!dateStr) continue;
+      // Type is column 1 if 3+ cols, otherwise default to main
+      let type = 'main';
+      let brand;
+      if (row.length >= 3) {
+        const typeStr = String(row[1] || '').toLowerCase();
+        if (typeStr.includes('bonus')) type = 'bonus';
+        brand = String(row[2] || '').trim();
+      } else {
+        brand = String(row[1] || '').trim();
+      }
+      if (!brand) continue;
+      parsed.push({ date: dateStr, type, brand });
+    }
+    if (parsed.length === 0) { alert('Could not parse any rows. Expected: Date, Type, Brand.'); return; }
+    importState.parsedData = parsed;
+    showCalendarPreview(parsed);
+  } else if (importState.mode === 'typeform') {
+    parseTypeformRows(rows);
+  } else {
+    // Creators — pass to the same parser as file
+    parseCreatorRows(rows);
+  }
+}
+
+// ---------- Confirm and apply ----------
+function confirmImport() {
+  const data = importState.parsedData;
+  if (!data) return;
+
+  if (importState.mode === 'typeform') {
+    const c = getActiveCampaign();
+    if (!c || !c.creators) return;
+    const normalize = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    let submitted = 0, optedOut = 0, skipped = 0;
+
+    data.forEach(r => {
+      // Match creator by email first, then name
+      let creator = null;
+      if (r.email) creator = c.creators.find(cr => cr.email && cr.email.toLowerCase() === r.email.toLowerCase());
+      if (!creator && r.name) creator = c.creators.find(cr => normalize(cr.name) === normalize(r.name));
+      if (!creator) { skipped++; return; }
+
+      if (r.isOptOut) {
+        creator.status = 'Opt Out';
+        optedOut++;
+      } else if (r.videoLink) {
+        creator.status = 'Submitted';
+        creator.videoLink = r.videoLink;
+        if (r.submitAt) creator.submittedAt = r.submitAt;
+        submitted++;
+      }
+    });
+
+    saveState();
+    renderCampaignEditor();
+    renderWhatsMissing();
+    closeImportModal();
+    showToast(`${submitted} marked submitted, ${optedOut} opted out, ${skipped} unmatched`);
+    return;
+  }
+
+  if (importState.mode === 'tracker') {
+    let campaignsCreated = 0, campaignsMerged = 0, creatorsAdded = 0;
+    const normalize = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+    data.forEach(importedCamp => {
+      // Try to match an existing campaign by brand name (prefer 2026+)
+      const match = state.campaigns.find(c =>
+        normalize(c.brand) === normalize(importedCamp.brand) &&
+        (!c.fgfDate || c.fgfDate.slice(0, 4) >= '2026')
+      );
+
+      if (match) {
+        // Merge creators into existing campaign
+        if (!match.creators) match.creators = [];
+        importedCamp.creators.forEach(impCr => {
+          if (!impCr.name && !impCr.email) return;
+          const existing = match.creators.find(cr =>
+            (impCr.email && normalize(cr.email) === normalize(impCr.email)) ||
+            normalize(cr.name) === normalize(impCr.name)
+          );
+          if (existing) {
+            // Update fields from the import (richer data wins)
+            if (impCr.tracking) existing.tracking = impCr.tracking;
+            if (impCr.status && impCr.status !== 'Not Submitted') existing.status = impCr.status;
+            if (impCr.videoLink) existing.videoLink = impCr.videoLink;
+            if (impCr.notes) existing.notes = impCr.notes;
+            if (impCr.email && !existing.email) existing.email = impCr.email;
+            if (impCr.inviteCode && !existing.inviteCode) existing.inviteCode = impCr.inviteCode;
+          } else {
+            match.creators.push({
+              id: 'cc' + Date.now() + Math.random(),
+              name: impCr.name,
+              email: impCr.email,
+              inviteCode: impCr.inviteCode,
+              tracking: impCr.tracking,
+              status: impCr.status,
+              videoLink: impCr.videoLink,
+              notes: impCr.notes
+            });
+            creatorsAdded++;
+          }
+        });
+        campaignsMerged++;
+      } else {
+        // Create a new campaign from this tracker tab
+        state.campaigns.push({
+          id: 'c' + Date.now() + Math.random(),
+          brand: importedCamp.brand,
+          fgfDate: '',
+          typeformUrl: '',
+          copyPointsUrl: '',
+          guidelinesUrl: '',
+          type: 'main',
+          creators: importedCamp.creators,
+          sopDone: {}
+        });
+        campaignsCreated++;
+        creatorsAdded += importedCamp.creators.length;
+      }
+
+      // Also add any new creators to the master roster
+      importedCamp.creators.forEach(impCr => {
+        if (!impCr.email) return;
+        const inRoster = state.roster.find(r =>
+          normalize(r.email) === normalize(impCr.email)
+        );
+        if (!inRoster) {
+          state.roster.push({
+            id: 'r' + Date.now() + Math.random(),
+            name: impCr.name,
+            email: impCr.email,
+            account: impCr.account || '',
+            code: impCr.inviteCode || ''
+          });
+        }
+      });
+    });
+
+    saveState();
+    renderCampaignsList();
+    renderOverview();
+    renderRoster();
+    closeImportModal();
+    showToast(`${campaignsMerged} merged, ${campaignsCreated} created, ${creatorsAdded} creators added`);
+    return;
+  }
+
+  if (importState.mode === 'calendar') {
+    const existingKeys = new Set(state.campaigns.map(c => `${c.fgfDate}|${(c.brand || '').toLowerCase()}`));
+    let added = 0;
+    data.forEach(r => {
+      const key = `${r.date}|${r.brand.toLowerCase()}`;
+      if (existingKeys.has(key)) return;
+      state.campaigns.push({
+        id: 'c' + Date.now() + Math.random(),
+        brand: r.brand,
+        fgfDate: r.date,
+        typeformUrl: '',
+        copyPointsUrl: '',
+        guidelinesUrl: '',
+        type: r.type,
+        creators: [],
+        sopDone: {}
+      });
+      added++;
+    });
+    saveState();
+    renderCampaignsList();
+    renderOverview();
+    closeImportModal();
+    showToast(`Added ${added} campaign${added === 1 ? '' : 's'}`);
+  } else if (importState.mode === 'comp-list') {
+    const c = getActiveCampaign();
+    if (!c) return;
+    if (!c.creators) c.creators = [];
+
+    const normalize = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+    // Who's on the incoming list
+    const incomingNames = new Set(data.filter(r => r.name).map(r => normalize(r.name)));
+
+    // Find who to remove — in campaign but NOT on comp list
+    const toRemove = c.creators.filter(cr => cr.name && !incomingNames.has(normalize(cr.name)));
+    const toRemoveEmails = new Set(toRemove.map(cr => (cr.email || '').toLowerCase()).filter(Boolean));
+    const toRemoveNames = new Set(toRemove.map(cr => normalize(cr.name)));
+
+    // Remove from campaign
+    c.creators = c.creators.filter(cr => !toRemoveNames.has(normalize(cr.name)));
+
+    // Remove from master roster by email or name
+    state.roster = state.roster.filter(r => {
+      const emailMatch = r.email && toRemoveEmails.has(r.email.toLowerCase());
+      const nameMatch = r.name && toRemoveNames.has(normalize(r.name));
+      return !emailMatch && !nameMatch;
+    });
+
+    // Now add / update incoming creators
+    let added = 0, updated = 0, skipped = 0;
+    data.forEach(r => {
+      if (!r.name) { skipped++; return; }
+
+      const existing = c.creators.find(cr => normalize(cr.name) === normalize(r.name));
+
+      if (existing) {
+        if (r.tracking) existing.tracking = r.tracking;
+        if (r.email && !existing.email) existing.email = r.email;
+        if (r.code && !existing.inviteCode) existing.inviteCode = r.code;
+        updated++;
+      } else {
+        // Look up email from roster if not in comp list
+        let email = r.email;
+        let code = r.code;
+        if (!email || !code) {
+          const rosterMatch = state.roster.find(rm => normalize(rm.name) === normalize(r.name));
+          if (rosterMatch) {
+            if (!email) email = rosterMatch.email;
+            if (!code) code = rosterMatch.code;
+          }
+        }
+        c.creators.push({
+          id: 'cc' + Date.now() + Math.random(),
+          name: r.name,
+          email: email || '',
+          inviteCode: code || '',
+          tracking: r.tracking || '',
+          status: 'Not Submitted',
+          videoLink: ''
+        });
+        added++;
+      }
+    });
+
+    saveState();
+    renderCampaignEditor();
+    renderCampaignsList();
+    renderRoster();
+    closeImportModal();
+    let msg = `${added} added, ${updated} updated`;
+    if (toRemove.length) msg += `, ${toRemove.length} removed`;
+    if (skipped) msg += `, ${skipped} skipped`;
+    showToast(msg);
+  } else {
+    // roster — full sync
+    const normalize = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const incomingEmails = new Set(data.filter(r => r.email).map(r => r.email.toLowerCase()));
+    const incomingNames  = new Set(data.filter(r => r.name).map(r => normalize(r.name)));
+
+    // Find who's being removed from roster
+    const toRemove = state.roster.filter(r => {
+      const emailMatch = r.email && incomingEmails.has(r.email.toLowerCase());
+      const nameMatch  = r.name && incomingNames.has(normalize(r.name));
+      return !emailMatch && !nameMatch;
+    });
+    const removeEmails = new Set(toRemove.map(r => (r.email || '').toLowerCase()).filter(Boolean));
+    const removeNames  = new Set(toRemove.map(r => normalize(r.name)).filter(Boolean));
+
+    // Remove from master roster
+    state.roster = state.roster.filter(r => {
+      if (r.email && removeEmails.has(r.email.toLowerCase())) return false;
+      if (r.name && removeNames.has(normalize(r.name))) return false;
+      return true;
+    });
+
+    // Remove from ALL campaign creator lists
+    state.campaigns.forEach(c => {
+      if (!c.creators) return;
+      c.creators = c.creators.filter(cr => {
+        if (cr.email && removeEmails.has(cr.email.toLowerCase())) return false;
+        if (cr.name && removeNames.has(normalize(cr.name))) return false;
+        return true;
+      });
+    });
+
+    // Add new creators / update existing
+    let added = 0;
+    data.forEach(r => {
+      if (!r.email && !r.name) return;
+      const existing = state.roster.find(rm =>
+        (r.email && rm.email && rm.email.toLowerCase() === r.email.toLowerCase()) ||
+        normalize(rm.name) === normalize(r.name)
+      );
+      if (existing) {
+        if (r.account) existing.account = r.account;
+        if (r.code) existing.code = r.code;
+      } else {
+        state.roster.push({
+          id: 'r' + Date.now() + Math.random(),
+          name: r.name || '',
+          email: r.email || '',
+          account: r.account || '',
+          code: r.code || ''
+        });
+        added++;
+      }
+    });
+
+    saveState();
+    renderRoster();
+    renderCampaignsList();
+    renderOverview();
+    closeImportModal();
+    let msg = `Roster synced — ${added} added`;
+    if (toRemove.length) msg += `, ${toRemove.length} removed from roster + campaigns`;
+    showToast(msg);
+  }
+}
+
+// Wire up the upload buttons
+document.getElementById('upload-calendar-btn').addEventListener('click', openCalendarUpload);
+document.getElementById('upload-comp-top-btn').addEventListener('click', openCompListUpload);
+document.getElementById('upload-tracker-btn').addEventListener('click', openTrackerUpload);
+document.getElementById('cleanup-btn').addEventListener('click', cleanupEmptyCampaigns);
+
+function cleanupEmptyCampaigns() {
+  // Delete campaigns before Nov 2025 with zero creators
+  const cutoff = '2025-11-01';
+  const toDelete = state.campaigns.filter(c => {
+    if (!c.fgfDate) return false; // keep no-date campaigns (imported from tracker)
+    if (c.fgfDate >= cutoff) return false; // keep Nov 2025+
+    if ((c.creators || []).length > 0) return false; // keep anything with creators
+    return true;
+  });
+
+  if (toDelete.length === 0) {
+    showToast('No empty campaigns before Nov 2025 found');
+    return;
+  }
+
+  showBulkConfirm(
+    `Delete ${toDelete.length} empty campaign${toDelete.length === 1 ? '' : 's'} before Nov 2025?`,
+    toDelete.map(c => `${c.brand || 'Untitled'} — ${c.fgfDate}`),
+    `Delete ${toDelete.length} campaigns`,
+    () => {
+      const deleteIds = new Set(toDelete.map(c => c.id));
+      state.campaigns = state.campaigns.filter(c => !deleteIds.has(c.id));
+      saveState();
+      renderCampaignsList();
+      renderOverview();
+      showToast(`Deleted ${toDelete.length} empty campaigns`);
+    }
+  );
+}
+
+// Filter listeners
+document.getElementById('filter-search').addEventListener('input', (e) => {
+  state.filters.search = e.target.value;
+  saveState();
+  renderCampaignsList();
+});
+document.getElementById('filter-year').addEventListener('change', (e) => {
+  state.filters.year = e.target.value;
+  saveState();
+  renderCampaignsList();
+});
+document.getElementById('filter-month').addEventListener('change', (e) => {
+  state.filters.month = e.target.value;
+  saveState();
+  renderCampaignsList();
+});
+document.getElementById('filter-type').addEventListener('change', (e) => {
+  state.filters.type = e.target.value;
+  saveState();
+  renderCampaignsList();
+});
+
+// Back button
+document.getElementById('back-to-campaigns').addEventListener('click', backToCampaignsList);
+
+// Close import modal on overlay click / escape
+document.getElementById('import-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'import-modal') closeImportModal();
+});
+
+// ================================================================
+// INIT
+// ================================================================
+loadState();
+renderOverview();
+renderRoster();
+renderCampaignsList();
+
+// Handle modal escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeImportModal();
+    closeHelpModal();
+    closeBulkConfirm();
+  }
+});
+document.getElementById('bulk-confirm-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'bulk-confirm-modal') closeBulkConfirm();
+});
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') closeModal();
+});
+</script>
+</body>
+</html>
